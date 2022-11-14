@@ -20,10 +20,13 @@ html {
 margin-left: 1em;
 }
 
-            a:link {color: black; background: #009966;}      /* unvisited link */
-            a:visited { color:black; background: #009966;}  /* visited link */
-            a:hover {color: #009966; background: black;}  /* selected link */
-            a:active {color: #009966; background: black;}  /* selected link */
+::selection { background: #009966; color: black;}
+
+
+a:link {color: black; background: #009966;}      /* unvisited link */
+a:visited { color:black; background: #009966;}  /* visited link */
+a:hover {color: #009966; background: black;}  /* selected link */
+a:active {color: #009966; background: black;}  /* selected link */
 
 .footer {
     bottom: 0px;
