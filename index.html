@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>SysInfo | TheDen.sh</title>
+    <meta name="Description" content="System Information via the Web" />
+		<meta name="Keywords" content="Sysinfo, System Information, Hardware Information, theden.sh" />
+    <meta name="robots" content="all">
+		<link rel='icon' href='favicon.ico' type='image/x-icon' />
+    <meta name="theme-color" content="#009966">
+		<meta name="google" content="notranslate">
+		<style>
+
+html {
+  font-family: monospace;
+	background-color: black;
+	color: #009966;
+margin-left: 1em;
+}
+
+            a:link {color: black; background: #009966;}      /* unvisited link */
+            a:visited { color:black; background: #009966;}  /* visited link */
+            a:hover {color: #009966; background: black;}  /* selected link */
+            a:active {color: #009966; background: black;}  /* selected link */
+
+.footer {
+    position: absolute;
+    bottom: 0px;
+    font-family: monospace;
+}
+.info {
+	font-family: monospace;
+padding-left: 1em;
+}
+
+.heading2 {
+	display: none;
+}
+				.MediaDeviceInfo {
+					displaye: normal;
+				}
+
+				@media only screen and (max-width: 800px) {
+					.heading2 {
+						display: revert !important;
+					}
+					.heading1 {
+						display: none !important;
+					}
+				}
+
+
+		</style>
+		<body>
+<div class="heading1">
+<pre>
+ ▄▄▄▄▄▄▄▄▄▄▄  ▄         ▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄        ▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄ 
+▐░░░░░░░░░░░▌▐░▌       ▐░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░▌      ▐░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌
+▐░█▀▀▀▀▀▀▀▀▀ ▐░▌       ▐░▌▐░█▀▀▀▀▀▀▀▀▀  ▀▀▀▀█░█▀▀▀▀ ▐░▌░▌     ▐░▌▐░█▀▀▀▀▀▀▀▀▀ ▐░█▀▀▀▀▀▀▀█░▌
+▐░▌          ▐░▌       ▐░▌▐░▌               ▐░▌     ▐░▌▐░▌    ▐░▌▐░▌          ▐░▌       ▐░▌
+▐░█▄▄▄▄▄▄▄▄▄ ▐░█▄▄▄▄▄▄▄█░▌▐░█▄▄▄▄▄▄▄▄▄      ▐░▌     ▐░▌ ▐░▌   ▐░▌▐░█▄▄▄▄▄▄▄▄▄ ▐░▌       ▐░▌
+▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌     ▐░▌     ▐░▌  ▐░▌  ▐░▌▐░░░░░░░░░░░▌▐░▌       ▐░▌
+ ▀▀▀▀▀▀▀▀▀█░▌ ▀▀▀▀█░█▀▀▀▀  ▀▀▀▀▀▀▀▀▀█░▌     ▐░▌     ▐░▌   ▐░▌ ▐░▌▐░█▀▀▀▀▀▀▀▀▀ ▐░▌       ▐░▌
+          ▐░▌     ▐░▌               ▐░▌     ▐░▌     ▐░▌    ▐░▌▐░▌▐░▌          ▐░▌       ▐░▌
+ ▄▄▄▄▄▄▄▄▄█░▌     ▐░▌      ▄▄▄▄▄▄▄▄▄█░▌ ▄▄▄▄█░█▄▄▄▄ ▐░▌     ▐░▐░▌▐░▌          ▐░█▄▄▄▄▄▄▄█░▌
+▐░░░░░░░░░░░▌     ▐░▌     ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░▌      ▐░░▌▐░▌          ▐░░░░░░░░░░░▌
+ ▀▀▀▀▀▀▀▀▀▀▀       ▀       ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀        ▀▀  ▀            ▀▀▀▀▀▀▀▀▀▀▀ 
+    </pre>
+</div>
+<div class="heading2">
+	<pre>
+               _        __
+ ___ _   _ ___(_)_ __  / _| ___
+/ __| | | / __| | '_ \| |_ / _ \
+\__ \ |_| \__ \ | | | |  _| (_) |
+|___/\__, |___/_|_| |_|_|  \___/
+     |___/
+
+</pre>
+</div>
+			<canvas id="canvas" width="0" height="0"></canvas>
+
+			<div class="language">
+				<p>Lanuage</p>
+				<div class="info" id="language"></div>
+			</div>
+
+      <div class="timeZone">
+        <p>Time Zone</p>
+        <div class="info" id="timeZone"></div>
+      </div>
+
+      <div class="operatingSystem">
+        <p>Operating System</p>
+        <div class="info" id="operatingSystem"></div>
+      </div>
+
+      <div class="ipAddress">
+        <p>IP Address</p>
+        <div class="info" id="ipAddress"></div>
+      </div>
+
+			<div class="cpuCores">
+				<p>CPU </p>
+					<div class="info" id="cpuCores"></div>
+			</div>
+
+			<div class="GPU">
+				<p>GPU</p>
+					<div class="info" id="GPU"></div>
+			</div>
+
+			<div class="userAgent">
+				<p>User Agent</p>
+					<div class="info" id="userAgent"></div>
+			</div>
+
+			<div class="screen">
+				<p>Screen</p>
+					<div class="info" id="screen"></div>
+			</div>
+
+			<div class="MediaDeviceInfo">
+				<p>MediaDeviceInfo</p>
+					<div class="info" id="MediaDeviceInfo"></div>
+			</div>
+
+			<div class="footer"><a href="https://theden.sh" target="_blank" rel="noopener">/TheDen.sh</a></div>
+
+			<script>
+				// IP Address
+				var request = new XMLHttpRequest();
+				request.open('GET', 'https://api.ipify.org?format=jsonp&callback=?', true);
+				request.onload = function() {
+					if (request.status >= 200 && request.status < 400) {
+						ipAddress = JSON.parse((request.responseText.replaceAll(");", "",).replaceAll("?(", ""))).ip
+						document.getElementById('ipAddress').innerHTML = "IP Address: " + ipAddress;
+					} else {
+						document.querySelector('.ipAddress').style.display = "none";
+					}
+				};
+
+				request.onerror = function() {
+					document.querySelector('.ipAddress').style.display = "none";
+				};
+
+				if (!ipAddress)  { document.querySelector('.ipAddress').style.display = "none"; }
+
+
+				request.send();
+				// Time Zone
+				timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone
+				if (!timeZone)  { document.querySelector('.timeZone').style.display = "none"; }
+        document.getElementById('timeZone').innerHTML = "Timezone: " + timeZone;
+
+				// Operating System
+				userAgent = navigator.userAgent;
+				os="";
+				if (userAgent.search('Windows')!==-1){
+					os="Windows";
+				}
+				else if (userAgent.search('Mac')!==-1){
+					os="MacOS";
+				}
+				else if (userAgent.search('X11')!==-1 && !(os.search('Linux')!==-1)){
+					os="UNIX";
+				}
+				else if (userAgent.search('Linux')!==-1 && os.search('X11')!==-1){
+					os="Linux"
+				}
+				if (!os)  { document.querySelector('.operatingSystem').style.display = "none"; }
+        document.getElementById('operatingSystem').innerHTML = "OS: " + os;
+
+				// Language
+				language = navigator.language
+				if (!language)  { language= "N/A" }
+				document.getElementById('language').innerHTML = "Locale: " + language;
+
+				// CPU
+				cpuCores = navigator.hardwareConcurrency;
+				if (!cpuCores)  { cpuCores = "N/A" }
+				document.getElementById('cpuCores').innerHTML = "CPU Cores: " + cpuCores;
+
+				// User Agent
+				userAgent = navigator.userAgent;
+				if (!userAgent)  { userAgent = "N/A" }
+				document.getElementById('userAgent').innerHTML = "User Agent: " + userAgent;
+
+				// GPU
+				var canvas = document.createElement('canvas');
+				var gl;
+				var debugInfo;
+				var renderer;
+				try {
+					gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+				} catch (e) {
+				}
+				if (gl) {
+					debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+					renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+				}
+				document.getElementById('GPU').innerHTML = "GPU: " + renderer;
+
+				// Screen Resolution
+				document.getElementById('screen').innerHTML = "Screen Resolution: " + window.screen.width * window.devicePixelRatio + "x" + window.screen.height * window.devicePixelRatio;
+
+				if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+					navigator.enumerateDevices = function(callback) {
+						navigator.mediaDevices.enumerateDevices().then(callback);
+					};
+				}
+				// MediaDeviceInfo
+					deviceInfo = '';
+					navigator.mediaDevices.enumerateDevices()
+						.then((devices) => {
+							devices.forEach((device) => {
+								if (!device.label.length == 0 || !device.deviceId.length == 0) {
+									deviceInfo +=`<pre>${device.kind}: ${device.label} id = ${device.deviceId}</pre>`
+								}
+							});
+							if (deviceInfo.length == 0) {
+							document.querySelector('.MediaDeviceInfo').style.display = "none";
+							}
+							document.getElementById('MediaDeviceInfo').innerHTML =  deviceInfo;
+						})
+						.catch((err) => {
+							console.log(`${err.name}: ${err.message}`);
+						});
+			</script>
+		</body>
+</html>
