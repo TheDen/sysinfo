@@ -10,6 +10,7 @@
 		<link rel='icon' href='favicon.ico' type='image/x-icon' />
     <meta name="theme-color" content="#009966">
 		<meta name="google" content="notranslate">
+		<meta http-equiv="Accept-CH" content="Device-Memory">
 		<style>
 
 html {
@@ -25,9 +26,9 @@ margin-left: 1em;
             a:active {color: #009966; background: black;}  /* selected link */
 
 .footer {
-    position: absolute;
     bottom: 0px;
     font-family: monospace;
+			padding-top: 1em;
 }
 .info {
 	font-family: monospace;
@@ -66,7 +67,7 @@ padding-left: 1em;
  ▄▄▄▄▄▄▄▄▄█░▌     ▐░▌      ▄▄▄▄▄▄▄▄▄█░▌ ▄▄▄▄█░█▄▄▄▄ ▐░▌     ▐░▐░▌▐░▌          ▐░█▄▄▄▄▄▄▄█░▌
 ▐░░░░░░░░░░░▌     ▐░▌     ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░▌      ▐░░▌▐░▌          ▐░░░░░░░░░░░▌
  ▀▀▀▀▀▀▀▀▀▀▀       ▀       ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀        ▀▀  ▀            ▀▀▀▀▀▀▀▀▀▀▀ 
-    </pre>
+</pre>
 </div>
 <div class="heading2">
 	<pre>
@@ -111,6 +112,11 @@ padding-left: 1em;
 					<div class="info" id="GPU"></div>
 			</div>
 
+      <div class="memory">
+        <p>Memory</p>
+          <div class="info" id="memory"></div>
+      </div>
+
 			<div class="userAgent">
 				<p>User Agent</p>
 					<div class="info" id="userAgent"></div>
@@ -121,6 +127,11 @@ padding-left: 1em;
 					<div class="info" id="screen"></div>
 			</div>
 
+      <div class="plugins">
+        <p>Plugins</p>
+          <div class="info" id="plugins"></div>
+      </div>
+
 			<div class="MediaDeviceInfo">
 				<p>MediaDeviceInfo</p>
 					<div class="info" id="MediaDeviceInfo"></div>
@@ -129,6 +140,24 @@ padding-left: 1em;
 			<div class="footer"><a href="https://theden.sh" target="_blank" rel="noopener">/TheDen.sh</a></div>
 
 			<script>
+        // Plugins
+				plugins = navigator.plugins
+        foundPlugins = ""
+				for (i=0; i<plugins.length ;i++) {
+					foundPlugins += `<pre>${plugins[i].name}</pre>`
+				}
+
+				if (foundPlugins.length == 0) {
+					document.querySelector('.plugins').style.display = "none";
+				}
+				document.getElementById('plugins').innerHTML =  foundPlugins;
+
+
+				// Memory
+				const memory = navigator.deviceMemory
+        if (!memory)  { document.querySelector('.memory').style.display = "none"; }
+        document.getElementById('memory').innerHTML = "Memory (at least): " + memory + "GBs";
+
 				// IP Address
 				var request = new XMLHttpRequest();
 				request.open('GET', 'https://api.ipify.org?format=jsonp&callback=?', true);
