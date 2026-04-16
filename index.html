@@ -4,64 +4,66 @@
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<title>SysInfo | TheDen.sh</title>
-    <meta name="Description" content="System Information via the Web" />
+		<meta name="Description" content="System Information via the Web" />
 		<meta name="Keywords" content="Sysinfo, System Information, Hardware Information, theden.sh" />
-    <meta name="robots" content="all">
+		<meta name="robots" content="all">
 		<link rel='icon' href='favicon.ico' type='image/x-icon' />
-    <meta name="theme-color" content="#009966">
+		<meta name="theme-color" content="#009966">
 		<meta name="google" content="notranslate">
 		<meta http-equiv="Accept-CH" content="Device-Memory">
 		<style>
 
 html {
   font-family: monospace;
-	background-color: black;
-	color: #009966;
-margin-left: 1em;
+  background-color: black;
+  color: #009966;
+  margin-left: 1em;
 }
 
-::selection { background: #009966; color: black;}
+::selection { background: #009966; color: black; }
 
-
-a:link {color: black; background: #009966;}      /* unvisited link */
-a:visited { color:black; background: #009966;}  /* visited link */
-a:hover {color: #009966; background: black;}  /* selected link */
-a:active {color: #009966; background: black;}  /* selected link */
+a:link    { color: black; background: #009966; }
+a:visited { color: black; background: #009966; }
+a:hover   { color: #009966; background: black; }
+a:active  { color: #009966; background: black; }
 
 .footer {
-    bottom: 0px;
-    font-family: monospace;
-			padding-top: 1em;
+  bottom: 0px;
+  font-family: monospace;
+  padding-top: 1em;
 }
+
 .info {
-	font-family: monospace;
-padding-left: 1em;
+  font-family: monospace;
+  padding-left: 1em;
 }
 
 .heading2 {
-	display: none;
+  display: none;
 }
-				.MediaDeviceInfo {
-					displaye: normal;
-				}
 
-				@media only screen and (max-width: 800px) {
-					.heading2 {
-						display: revert !important;
-					}
-					.heading1 {
-						display: none !important;
-					}
-				}
+.MediaDeviceInfo {
+  display: normal;
+}
 
-				canvas {
-					display: none;
-				}
+@media only screen and (max-width: 800px) {
+  .heading2 {
+    display: revert !important;
+  }
+  .heading1 {
+    display: none !important;
+  }
+}
+
+canvas {
+  display: none;
+}
 		</style>
-		<body>
-<div class="heading1">
+	</head>
+	<body>
+		<div class="heading1">
 <pre>
- ▄▄▄▄▄▄▄▄▄▄▄  ▄         ▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄        ▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄ 
+ ▄▄▄▄▄▄▄▄▄▄▄  ▄         ▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄        ▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄
 ▐░░░░░░░░░░░▌▐░▌       ▐░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░▌      ▐░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌
 ▐░█▀▀▀▀▀▀▀▀▀ ▐░▌       ▐░▌▐░█▀▀▀▀▀▀▀▀▀  ▀▀▀▀█░█▀▀▀▀ ▐░▌░▌     ▐░▌▐░█▀▀▀▀▀▀▀▀▀ ▐░█▀▀▀▀▀▀▀█░▌
 ▐░▌          ▐░▌       ▐░▌▐░▌               ▐░▌     ▐░▌▐░▌    ▐░▌▐░▌          ▐░▌       ▐░▌
@@ -71,11 +73,11 @@ padding-left: 1em;
           ▐░▌     ▐░▌               ▐░▌     ▐░▌     ▐░▌    ▐░▌▐░▌▐░▌          ▐░▌       ▐░▌
  ▄▄▄▄▄▄▄▄▄█░▌     ▐░▌      ▄▄▄▄▄▄▄▄▄█░▌ ▄▄▄▄█░█▄▄▄▄ ▐░▌     ▐░▐░▌▐░▌          ▐░█▄▄▄▄▄▄▄█░▌
 ▐░░░░░░░░░░░▌     ▐░▌     ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░▌      ▐░░▌▐░▌          ▐░░░░░░░░░░░▌
- ▀▀▀▀▀▀▀▀▀▀▀       ▀       ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀        ▀▀  ▀            ▀▀▀▀▀▀▀▀▀▀▀ 
+ ▀▀▀▀▀▀▀▀▀▀▀       ▀       ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀        ▀▀  ▀            ▀▀▀▀▀▀▀▀▀▀▀
 </pre>
-</div>
-<div class="heading2">
-	<pre>
+		</div>
+		<div class="heading2">
+			<pre>
                _        __
  ___ _   _ ___(_)_ __  / _| ___
 / __| | | / __| | '_ \| |_ / _ \
@@ -84,183 +86,311 @@ padding-left: 1em;
      |___/
 
 </pre>
-</div>
-			<canvas id="canvas" width="0" height="0"></canvas>
+		</div>
 
-			<div class="language">
-				<p>Lanuage</p>
-				<div class="info" id="language"></div>
-			</div>
+		<canvas id="canvas" width="0" height="0"></canvas>
 
-      <div class="timeZone">
-        <p>Time Zone</p>
-        <div class="info" id="timeZone"></div>
-      </div>
+		<div class="language">
+			<p>Language</p>
+			<div class="info" id="language"></div>
+		</div>
 
-      <div class="operatingSystem">
-        <p>Operating System</p>
-        <div class="info" id="operatingSystem"></div>
-      </div>
+		<div class="timeZone">
+			<p>Time Zone</p>
+			<div class="info" id="timeZone"></div>
+		</div>
 
-      <div class="ipAddress">
-        <p>Network</p>
-        <div class="info" id="ipAddress"></div>
-      </div>
+		<div class="operatingSystem">
+			<p>Operating System</p>
+			<div class="info" id="operatingSystem"></div>
+		</div>
 
-			<div class="cpuCores">
-				<p>CPU </p>
-					<div class="info" id="cpuCores"></div>
-			</div>
+		<div class="ipAddress">
+			<p>Network</p>
+			<div class="info" id="ipAddress"></div>
+		</div>
 
-			<div class="GPU">
-				<p>GPU</p>
-					<div class="info" id="GPU"></div>
-			</div>
+		<div class="connection">
+			<p>Connection</p>
+			<div class="info" id="connection"></div>
+		</div>
 
-      <div class="memory">
-        <p>Memory</p>
-          <div class="info" id="memory"></div>
-      </div>
+		<div class="cpuCores">
+			<p>CPU</p>
+			<div class="info" id="cpuCores"></div>
+		</div>
 
-			<div class="userAgent">
-				<p>User Agent</p>
-					<div class="info" id="userAgent"></div>
-			</div>
+		<div class="GPU">
+			<p>GPU</p>
+			<div class="info" id="GPU"></div>
+		</div>
 
-			<div class="screen">
-				<p>Screen</p>
-					<div class="info" id="screen"></div>
-			</div>
+		<div class="memory">
+			<p>Memory</p>
+			<div class="info" id="memory"></div>
+		</div>
 
-      <div class="plugins">
-        <p>Plugins</p>
-          <div class="info" id="plugins"></div>
-      </div>
+		<div class="performanceMemory">
+			<p>Performance Memory</p>
+			<div class="info" id="performanceMemory"></div>
+		</div>
 
-			<div class="MediaDeviceInfo">
-				<p>MediaDeviceInfo</p>
-					<div class="info" id="MediaDeviceInfo"></div>
-			</div>
+		<div class="battery">
+			<p>Battery</p>
+			<div class="info" id="battery"></div>
+		</div>
 
-			<div class="footer"><a href="https://theden.sh" target="_blank" rel="noopener">/TheDen.sh</a></div>
+		<div class="screen">
+			<p>Screen</p>
+			<div class="info" id="screen"></div>
+		</div>
 
-			<script>
-        // Plugins
-				plugins = navigator.plugins
-        foundPlugins = ""
-				for (i=0; i<plugins.length ;i++) {
-					foundPlugins += `<pre>${plugins[i].name}</pre>`
+		<div class="preferences">
+			<p>Preferences</p>
+			<div class="info" id="preferences"></div>
+		</div>
+
+		<div class="storage">
+			<p>Storage</p>
+			<div class="info" id="storage"></div>
+		</div>
+
+		<div class="browser">
+			<p>Browser</p>
+			<div class="info" id="browser"></div>
+		</div>
+
+		<div class="userAgent">
+			<p>User Agent</p>
+			<div class="info" id="userAgent"></div>
+		</div>
+
+		<div class="plugins">
+			<p>Plugins</p>
+			<div class="info" id="plugins"></div>
+		</div>
+
+		<div class="MediaDeviceInfo">
+			<p>MediaDeviceInfo</p>
+			<div class="info" id="MediaDeviceInfo"></div>
+		</div>
+
+		<div class="footer"><a href="https://theden.sh" target="_blank" rel="noopener">/TheDen.sh</a></div>
+
+		<script>
+			{
+				function hide(selector) {
+					const el = document.querySelector(selector);
+					if (el) el.style.display = "none";
 				}
 
-				if (foundPlugins.length == 0) {
-					document.querySelector('.plugins').style.display = "none";
+				function set(id, html) {
+					document.getElementById(id).innerHTML = html;
 				}
-				document.getElementById('plugins').innerHTML =  foundPlugins;
 
+				function row(label, value) {
+					return `<pre>${label}: ${value}</pre>`;
+				}
+
+				// Plugins
+				const plugins = navigator.plugins;
+				let foundPlugins = "";
+				for (let i = 0; i < plugins.length; i++) {
+					foundPlugins += `<pre>${plugins[i].name}</pre>`;
+				}
+				if (foundPlugins.length === 0) {
+					hide('.plugins');
+				}
+				set('plugins', foundPlugins);
 
 				// Memory
-				const memory = navigator.deviceMemory
-        if (!memory)  { document.querySelector('.memory').style.display = "none"; }
-        document.getElementById('memory').innerHTML = "Memory (at least): " + memory + "GBs";
+				const memory = navigator.deviceMemory;
+				if (!memory) {
+					hide('.memory');
+				} else {
+					set('memory', row("Memory (at least)", memory + " GB"));
+				}
+
+				// Performance Memory (Chromium only)
+				if (performance.memory) {
+					const mb = (bytes) => (bytes / 1024 / 1024).toFixed(1) + " MB";
+					set('performanceMemory',
+						row("JS Heap Used", mb(performance.memory.usedJSHeapSize)) +
+						row("JS Heap Total", mb(performance.memory.totalJSHeapSize)) +
+						row("JS Heap Limit", mb(performance.memory.jsHeapSizeLimit))
+					);
+				} else {
+					hide('.performanceMemory');
+				}
 
 				// IP Address
-				var request = new XMLHttpRequest();
-				request.open('GET', 'https://api.ipify.org?format=jsonp&callback=?', true);
-				request.onload = function() {
-					if (request.status >= 200 && request.status < 400) {
-						ipAddress = JSON.parse((request.responseText.replaceAll(");", "",).replaceAll("?(", ""))).ip
-						document.getElementById('ipAddress').innerHTML = "IP Address: " + ipAddress;
+				fetch('https://api.ipify.org?format=json')
+					.then(res => res.json())
+					.then(data => {
+						set('ipAddress', row("IP Address", data.ip));
+					})
+					.catch(() => {
+						hide('.ipAddress');
+					});
+
+				// Network Connection
+				const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+				if (conn) {
+					let connInfo = "";
+					if (conn.effectiveType) connInfo += row("Effective Type", conn.effectiveType);
+					if (conn.downlink != null) connInfo += row("Downlink", conn.downlink + " Mbps");
+					if (conn.rtt != null)      connInfo += row("RTT", conn.rtt + " ms");
+					if (conn.saveData != null)  connInfo += row("Data Saver", conn.saveData ? "on" : "off");
+					if (connInfo.length === 0) {
+						hide('.connection');
 					} else {
-						document.querySelector('.ipAddress').style.display = "none";
+						set('connection', connInfo);
 					}
-				};
+				} else {
+					hide('.connection');
+				}
 
-				request.onerror = function() {
-					document.querySelector('.ipAddress').style.display = "none";
-				};
-
-				if (!ipAddress)  { document.querySelector('.ipAddress').style.display = "none"; }
-
-
-				request.send();
 				// Time Zone
-				timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone
-				if (!timeZone)  { document.querySelector('.timeZone').style.display = "none"; }
-        document.getElementById('timeZone').innerHTML = "Timezone: " + timeZone;
+				const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+				if (!timeZone) {
+					hide('.timeZone');
+				} else {
+					set('timeZone', row("Timezone", timeZone));
+				}
 
 				// Operating System
-				userAgent = navigator.userAgent;
-				os="";
-				if (userAgent.search('Windows')!==-1){
-					os="Windows";
+				const userAgent = navigator.userAgent;
+				let os = "";
+				if (userAgent.includes('Windows'))     os = "Windows";
+				else if (userAgent.includes('iPhone')) os = "iOS";
+				else if (userAgent.includes('iPad'))   os = "iPadOS";
+				else if (userAgent.includes('Android')) os = "Android";
+				else if (userAgent.includes('Mac'))    os = "MacOS";
+				else if (userAgent.includes('Linux'))  os = "Linux";
+				else if (userAgent.includes('X11'))    os = "UNIX";
+				if (!os) {
+					hide('.operatingSystem');
+				} else {
+					set('operatingSystem', row("OS", os));
 				}
-				else if (userAgent.search('Mac')!==-1){
-					os="MacOS";
-				}
-				else if (userAgent.search('X11')!==-1 && !(os.search('Linux')!==-1)){
-					os="UNIX";
-				}
-				else if (userAgent.search('Linux')!==-1 && os.search('X11')!==-1){
-					os="Linux"
-				}
-				if (!os)  { document.querySelector('.operatingSystem').style.display = "none"; }
-        document.getElementById('operatingSystem').innerHTML = "OS: " + os;
 
 				// Language
-				language = navigator.language
-				if (!language)  { language= "N/A" }
-				document.getElementById('language').innerHTML = "Locale: " + language;
+				const language = navigator.language || "N/A";
+				const languages = navigator.languages ? navigator.languages.join(", ") : language;
+				set('language', row("Locale", language) + row("Languages", languages));
 
 				// CPU
-				cpuCores = navigator.hardwareConcurrency;
-				if (!cpuCores)  { cpuCores = "N/A" }
-				document.getElementById('cpuCores').innerHTML = "CPU Cores: " + cpuCores;
+				const cpuCores = navigator.hardwareConcurrency || "N/A";
+				const touchPoints = navigator.maxTouchPoints;
+				let cpuInfo = row("CPU Cores", cpuCores);
+				if (touchPoints != null) cpuInfo += row("Max Touch Points", touchPoints);
+				set('cpuCores', cpuInfo);
 
 				// User Agent
-				userAgent = navigator.userAgent;
-				if (!userAgent)  { userAgent = "N/A" }
-				document.getElementById('userAgent').innerHTML = "User Agent: " + userAgent;
+				set('userAgent', row("User Agent", userAgent || "N/A"));
 
 				// GPU
-				var canvas = document.createElement('canvas');
-				var gl;
-				var debugInfo;
-				var renderer;
+				const glCanvas = document.createElement('canvas');
+				let gpuInfo = "N/A";
 				try {
-					gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-				} catch (e) {
-				}
-				if (gl) {
-					debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
-					renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
-				}
-				document.getElementById('GPU').innerHTML = "GPU: " + renderer;
+					const gl = glCanvas.getContext('webgl') || glCanvas.getContext('experimental-webgl');
+					if (gl) {
+						const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+						if (debugInfo) {
+							const vendor   = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL);
+							const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+							gpuInfo = row("Vendor", vendor) + row("Renderer", renderer);
+						}
+					}
+				} catch (e) {}
+				set('GPU', typeof gpuInfo === 'string' && gpuInfo === 'N/A' ? row("GPU", "N/A") : gpuInfo);
 
-				// Screen Resolution
-				document.getElementById('screen').innerHTML = "Screen Resolution: " + window.screen.width * window.devicePixelRatio + "x" + window.screen.height * window.devicePixelRatio;
+				// Screen
+				const dpr = window.devicePixelRatio || 1;
+				const orientation = screen.orientation ? screen.orientation.type : "N/A";
+				set('screen',
+					row("Resolution", (screen.width * dpr) + "x" + (screen.height * dpr)) +
+					row("Available", screen.availWidth + "x" + screen.availHeight) +
+					row("Color Depth", screen.colorDepth + "-bit") +
+					row("Pixel Ratio", dpr) +
+					row("Orientation", orientation)
+				);
 
-				if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
-					navigator.enumerateDevices = function(callback) {
-						navigator.mediaDevices.enumerateDevices().then(callback);
-					};
+				// Battery
+				if (navigator.getBattery) {
+					navigator.getBattery().then((bat) => {
+						const level = Math.round(bat.level * 100) + "%";
+						const charging = bat.charging ? "yes" : "no";
+						let batInfo = row("Level", level) + row("Charging", charging);
+						if (bat.charging && bat.chargingTime !== Infinity) {
+							batInfo += row("Time to Full", Math.round(bat.chargingTime / 60) + " min");
+						}
+						if (!bat.charging && bat.dischargingTime !== Infinity) {
+							batInfo += row("Time Remaining", Math.round(bat.dischargingTime / 60) + " min");
+						}
+						set('battery', batInfo);
+					}).catch(() => hide('.battery'));
+				} else {
+					hide('.battery');
 				}
+
+				// Preferences
+				const mq = (query) => window.matchMedia(query).matches;
+				set('preferences',
+					row("Dark Mode",       mq('(prefers-color-scheme: dark)')       ? "yes" : "no") +
+					row("Reduced Motion",  mq('(prefers-reduced-motion: reduce)')   ? "yes" : "no") +
+					row("High Contrast",   mq('(forced-colors: active)')            ? "yes" : "no") +
+					row("HDR",             mq('(dynamic-range: high)')              ? "yes" : "no") +
+					row("Reduced Data",    mq('(prefers-reduced-data: reduce)')     ? "yes" : "no")
+				);
+
+				// Storage
+				if (navigator.storage && navigator.storage.estimate) {
+					navigator.storage.estimate().then((estimate) => {
+						const gb = (bytes) => (bytes / 1024 / 1024 / 1024).toFixed(2) + " GB";
+						set('storage',
+							row("Quota", gb(estimate.quota)) +
+							row("Used", gb(estimate.usage))
+						);
+					}).catch(() => hide('.storage'));
+				} else {
+					hide('.storage');
+				}
+
+				// Browser capabilities
+				set('browser',
+					row("Cookies Enabled",  navigator.cookieEnabled ? "yes" : "no") +
+					row("Online",           navigator.onLine ? "yes" : "no") +
+					row("PDF Viewer",       navigator.pdfViewerEnabled ? "yes" : "no") +
+					row("WebAssembly",      typeof WebAssembly === 'object' ? "yes" : "no") +
+					row("Service Worker",   'serviceWorker' in navigator ? "yes" : "no") +
+					row("WebSockets",       typeof WebSocket !== 'undefined' ? "yes" : "no") +
+					row("WebRTC",           typeof RTCPeerConnection !== 'undefined' ? "yes" : "no") +
+					row("Notifications",    typeof Notification !== 'undefined' ? "yes" : "no")
+				);
+
 				// MediaDeviceInfo
-					deviceInfo = '';
+				if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
 					navigator.mediaDevices.enumerateDevices()
 						.then((devices) => {
+							let deviceInfo = '';
 							devices.forEach((device) => {
-								if (!device.label.length == 0 || !device.deviceId.length == 0) {
-									deviceInfo +=`<pre>${device.kind}: ${device.label} id = ${device.deviceId}</pre>`
+								if (device.label.length > 0 || device.deviceId.length > 0) {
+									deviceInfo += `<pre>${device.kind}: ${device.label} id = ${device.deviceId}</pre>`;
 								}
 							});
-							if (deviceInfo.length == 0) {
-							document.querySelector('.MediaDeviceInfo').style.display = "none";
+							if (deviceInfo.length === 0) {
+								hide('.MediaDeviceInfo');
 							}
-							document.getElementById('MediaDeviceInfo').innerHTML =  deviceInfo;
+							set('MediaDeviceInfo', deviceInfo);
 						})
 						.catch((err) => {
 							console.log(`${err.name}: ${err.message}`);
 						});
-			</script>
-		</body>
+				} else {
+					hide('.MediaDeviceInfo');
+				}
+			}
+		</script>
+	</body>
 </html>
