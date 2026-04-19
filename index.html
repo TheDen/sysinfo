@@ -15,9 +15,16 @@
 
 html {
   font-family: monospace;
-  background-color: black;
+  background-color: #0a0a0a;
   color: #009966;
-  margin-left: 1em;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 1em 1.5em 2em;
 }
 
 ::selection { background: #009966; color: black; }
@@ -27,15 +34,55 @@ a:visited { color: black; background: #009966; }
 a:hover   { color: #009966; background: black; }
 a:active  { color: #009966; background: black; }
 
-.footer {
-  bottom: 0px;
-  font-family: monospace;
-  padding-top: 1em;
+.section {
+  border: 1px solid #1a3d2e;
+  border-radius: 4px;
+  margin-bottom: 0.75em;
+  background: #0d1a14;
+  overflow: hidden;
+}
+
+.section > p {
+  margin: 0;
+  padding: 0.4em 0.8em;
+  background: #1a3d2e;
+  color: #33cc99;
+  font-weight: bold;
+  font-size: 0.85em;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
 }
 
 .info {
   font-family: monospace;
-  padding-left: 1em;
+  padding: 0.4em 0.8em;
+}
+
+.info pre {
+  margin: 0;
+  padding: 0.2em 0;
+  border-bottom: 1px solid #112a1f;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.info pre:last-child {
+  border-bottom: none;
+}
+
+.kv-label {
+  color: #66b399;
+}
+
+.kv-value {
+  color: #009966;
+}
+
+.footer {
+  font-family: monospace;
+  padding-top: 1.5em;
+  text-align: center;
+  font-size: 0.9em;
 }
 
 .heading2 {
@@ -52,6 +99,9 @@ a:active  { color: #009966; background: black; }
   }
   .heading1 {
     display: none !important;
+  }
+  body {
+    padding: 0.5em 0.75em 1.5em;
   }
 }
 
@@ -90,88 +140,88 @@ canvas {
 
 		<canvas id="canvas" width="0" height="0"></canvas>
 
-		<div class="language">
+		<div class="section language">
 			<p>Language</p>
 			<div class="info" id="language"></div>
 		</div>
 
-		<div class="timeZone">
+		<div class="section timeZone">
 			<p>Time Zone</p>
 			<div class="info" id="timeZone"></div>
 		</div>
 
-		<div class="operatingSystem">
+		<div class="section operatingSystem">
 			<p>Operating System</p>
 			<div class="info" id="operatingSystem"></div>
 		</div>
 
-		<div class="ipAddress">
+		<div class="section ipAddress">
 			<p>Network</p>
 			<div class="info" id="ipAddress"></div>
 		</div>
 
-		<div class="connection">
+		<div class="section connection">
 			<p>Connection</p>
 			<div class="info" id="connection"></div>
 		</div>
 
-		<div class="cpuCores">
+		<div class="section cpuCores">
 			<p>CPU</p>
 			<div class="info" id="cpuCores"></div>
 		</div>
 
-		<div class="GPU">
+		<div class="section GPU">
 			<p>GPU</p>
 			<div class="info" id="GPU"></div>
 		</div>
 
-		<div class="memory">
+		<div class="section memory">
 			<p>Memory</p>
 			<div class="info" id="memory"></div>
 		</div>
 
-		<div class="performanceMemory">
+		<div class="section performanceMemory">
 			<p>Performance Memory</p>
 			<div class="info" id="performanceMemory"></div>
 		</div>
 
-		<div class="battery">
+		<div class="section battery">
 			<p>Battery</p>
 			<div class="info" id="battery"></div>
 		</div>
 
-		<div class="screen">
+		<div class="section screen">
 			<p>Screen</p>
 			<div class="info" id="screen"></div>
 		</div>
 
-		<div class="preferences">
+		<div class="section preferences">
 			<p>Preferences</p>
 			<div class="info" id="preferences"></div>
 		</div>
 
-		<div class="storage">
+		<div class="section storage">
 			<p>Storage</p>
 			<div class="info" id="storage"></div>
 		</div>
 
-		<div class="browser">
+		<div class="section browser">
 			<p>Browser</p>
 			<div class="info" id="browser"></div>
 		</div>
 
-		<div class="userAgent">
+		<div class="section userAgent">
 			<p>User Agent</p>
 			<div class="info" id="userAgent"></div>
 		</div>
 
-		<div class="plugins">
+		<div class="section plugins">
 			<p>Plugins</p>
 			<div class="info" id="plugins"></div>
 		</div>
 
-		<div class="MediaDeviceInfo">
-			<p>MediaDeviceInfo</p>
+		<div class="section MediaDeviceInfo">
+			<p>Media Devices</p>
 			<div class="info" id="MediaDeviceInfo"></div>
 		</div>
 
@@ -189,14 +239,14 @@ canvas {
 				}
 
 				function row(label, value) {
-					return `<pre>${label}: ${value}</pre>`;
+					return `<pre><span class="kv-label">${label}</span>  <span class="kv-value">${value}</span></pre>`;
 				}
 
 				// Plugins
 				const plugins = navigator.plugins;
 				let foundPlugins = "";
 				for (let i = 0; i < plugins.length; i++) {
-					foundPlugins += `<pre>${plugins[i].name}</pre>`;
+					foundPlugins += `<pre><span class="kv-value">${plugins[i].name}</span></pre>`;
 				}
 				if (foundPlugins.length === 0) {
 					hide('.plugins');
@@ -376,7 +426,7 @@ canvas {
 							let deviceInfo = '';
 							devices.forEach((device) => {
 								if (device.label.length > 0 || device.deviceId.length > 0) {
-									deviceInfo += `<pre>${device.kind}: ${device.label} id = ${device.deviceId}</pre>`;
+									deviceInfo += `<pre><span class="kv-label">${device.kind}</span>  <span class="kv-value">${device.label || device.deviceId}</span></pre>`;
 								}
 							});
 							if (deviceInfo.length === 0) {
