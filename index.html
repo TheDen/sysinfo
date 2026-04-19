@@ -225,6 +225,81 @@ canvas {
 			<div class="info" id="MediaDeviceInfo"></div>
 		</div>
 
+		<div class="section canvasFingerprint">
+			<p>Canvas Fingerprint</p>
+			<div class="info" id="canvasFingerprint"></div>
+		</div>
+
+		<div class="section audioFingerprint">
+			<p>Audio Fingerprint</p>
+			<div class="info" id="audioFingerprint"></div>
+		</div>
+
+		<div class="section webglParams">
+			<p>WebGL Parameters</p>
+			<div class="info" id="webglParams"></div>
+		</div>
+
+		<div class="section fonts">
+			<p>Detected Fonts</p>
+			<div class="info" id="fonts"></div>
+		</div>
+
+		<div class="section speechVoices">
+			<p>Speech Synthesis Voices</p>
+			<div class="info" id="speechVoices"></div>
+		</div>
+
+		<div class="section permissions">
+			<p>Permissions</p>
+			<div class="info" id="permissions"></div>
+		</div>
+
+		<div class="section timing">
+			<p>Timing / Performance</p>
+			<div class="info" id="timing"></div>
+		</div>
+
+		<div class="section mathFingerprint">
+			<p>Math Fingerprint</p>
+			<div class="info" id="mathFingerprint"></div>
+		</div>
+
+		<div class="section intlInfo">
+			<p>Intl / Locale</p>
+			<div class="info" id="intlInfo"></div>
+		</div>
+
+		<div class="section mediaCapabilities">
+			<p>Media / Codec Support</p>
+			<div class="info" id="mediaCapabilities"></div>
+		</div>
+
+		<div class="section hardwareAPIs">
+			<p>Hardware APIs</p>
+			<div class="info" id="hardwareAPIs"></div>
+		</div>
+
+		<div class="section navigatorProps">
+			<p>Navigator</p>
+			<div class="info" id="navigatorProps"></div>
+		</div>
+
+		<div class="section inputDevices">
+			<p>Input Devices</p>
+			<div class="info" id="inputDevices"></div>
+		</div>
+
+		<div class="section windowProps">
+			<p>Window / Runtime</p>
+			<div class="info" id="windowProps"></div>
+		</div>
+
+		<div class="section cssSupport">
+			<p>CSS Support</p>
+			<div class="info" id="cssSupport"></div>
+		</div>
+
 		<div class="footer"><a href="https://theden.sh" target="_blank" rel="noopener">/TheDen.sh</a></div>
 
 		<script>
@@ -439,6 +514,579 @@ canvas {
 						});
 				} else {
 					hide('.MediaDeviceInfo');
+				}
+
+				// --- Canvas Fingerprint ---
+				try {
+					const cvs = document.createElement('canvas');
+					cvs.width = 280; cvs.height = 60;
+					const ctx = cvs.getContext('2d');
+					ctx.textBaseline = 'alphabetic';
+					ctx.fillStyle = '#f60';
+					ctx.fillRect(125, 1, 62, 20);
+					ctx.fillStyle = '#069';
+					ctx.font = '11pt Arial';
+					ctx.fillText('Cwm fjordbank \ud83d\ude00 glyphs vext quiz, \ud83c\udf0e', 2, 15);
+					ctx.fillStyle = 'rgba(102, 204, 0, 0.7)';
+					ctx.font = '18pt Arial';
+					ctx.fillText('Cwm fjordbank \ud83d\ude00 glyphs vext quiz, \ud83c\udf0e', 4, 45);
+					ctx.globalCompositeOperation = 'multiply';
+					ctx.fillStyle = 'rgb(255,0,255)';
+					ctx.beginPath();
+					ctx.arc(50, 50, 50, 0, Math.PI * 2, true);
+					ctx.closePath();
+					ctx.fill();
+					const dataUrl = cvs.toDataURL();
+					// simple hash
+					let hash = 0;
+					for (let i = 0; i < dataUrl.length; i++) {
+						hash = ((hash << 5) - hash) + dataUrl.charCodeAt(i);
+						hash |= 0;
+					}
+					set('canvasFingerprint', row("Hash", hash.toString(16)) + row("Data Length", dataUrl.length + " chars"));
+				} catch (e) {
+					hide('.canvasFingerprint');
+				}
+
+				// --- AudioContext Fingerprint ---
+				try {
+					const audioCtx = new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(1, 44100, 44100);
+					const oscillator = audioCtx.createOscillator();
+					oscillator.type = 'triangle';
+					oscillator.frequency.setValueAtTime(10000, audioCtx.currentTime);
+					const compressor = audioCtx.createDynamicsCompressor();
+					compressor.threshold.setValueAtTime(-50, audioCtx.currentTime);
+					compressor.knee.setValueAtTime(40, audioCtx.currentTime);
+					compressor.ratio.setValueAtTime(12, audioCtx.currentTime);
+					compressor.attack.setValueAtTime(0, audioCtx.currentTime);
+					compressor.release.setValueAtTime(0.25, audioCtx.currentTime);
+					oscillator.connect(compressor);
+					compressor.connect(audioCtx.destination);
+					oscillator.start(0);
+					audioCtx.startRendering().then((buffer) => {
+						const data = buffer.getChannelData(0);
+						let sum = 0;
+						for (let i = 4500; i < 5000; i++) sum += Math.abs(data[i]);
+						set('audioFingerprint',
+							row("Sum (4500-5000)", sum.toFixed(10)) +
+							row("Sample Rate", audioCtx.sampleRate + " Hz") +
+							row("Sample[4999]", data[4999].toFixed(15))
+						);
+					}).catch(() => hide('.audioFingerprint'));
+				} catch (e) {
+					hide('.audioFingerprint');
+				}
+
+				// --- Extended WebGL Parameters ---
+				try {
+					const c = document.createElement('canvas');
+					const gl2 = c.getContext('webgl2') || c.getContext('webgl') || c.getContext('experimental-webgl');
+					if (gl2) {
+						const params = [
+							['Max Texture Size', gl2.MAX_TEXTURE_SIZE],
+							['Max Renderbuffer', gl2.MAX_RENDERBUFFER_SIZE],
+							['Max Viewport', gl2.MAX_VIEWPORT_DIMS],
+							['Max Vertex Attribs', gl2.MAX_VERTEX_ATTRIBS],
+							['Max Varying Vectors', gl2.MAX_VARYING_VECTORS],
+							['Max Vertex Uniforms', gl2.MAX_VERTEX_UNIFORM_VECTORS],
+							['Max Fragment Uniforms', gl2.MAX_FRAGMENT_UNIFORM_VECTORS],
+							['Max Vertex Textures', gl2.MAX_VERTEX_TEXTURE_IMAGE_UNITS],
+							['Max Texture Units', gl2.MAX_TEXTURE_IMAGE_UNITS],
+							['Max Combined Textures', gl2.MAX_COMBINED_TEXTURE_IMAGE_UNITS],
+							['Max Cube Map Size', gl2.MAX_CUBE_MAP_TEXTURE_SIZE],
+							['Aliased Line Width', gl2.ALIASED_LINE_WIDTH_RANGE],
+							['Aliased Point Size', gl2.ALIASED_POINT_SIZE_RANGE],
+							['Stencil Bits', gl2.STENCIL_BITS],
+							['Depth Bits', gl2.DEPTH_BITS],
+						];
+						let wglInfo = row("WebGL Version", gl2.getParameter(gl2.VERSION));
+						wglInfo += row("GLSL Version", gl2.getParameter(gl2.SHADING_LANGUAGE_VERSION));
+						wglInfo += row("Vendor", gl2.getParameter(gl2.VENDOR));
+						wglInfo += row("Renderer", gl2.getParameter(gl2.RENDERER));
+						params.forEach(([label, param]) => {
+							const val = gl2.getParameter(param);
+							wglInfo += row(label, val instanceof Float32Array || val instanceof Int32Array ? Array.from(val).join(', ') : val);
+						});
+						const exts = gl2.getSupportedExtensions() || [];
+						wglInfo += row("Extensions", exts.length);
+						wglInfo += row("Extension List", exts.join(', '));
+						set('webglParams', wglInfo);
+					} else {
+						hide('.webglParams');
+					}
+				} catch (e) {
+					hide('.webglParams');
+				}
+
+				// --- Font Detection (CSS width hack) ---
+				try {
+					const baseFonts = ['monospace', 'sans-serif', 'serif'];
+					const testFonts = [
+						'Arial', 'Arial Black', 'Courier', 'Courier New', 'Georgia',
+						'Helvetica', 'Helvetica Neue', 'Impact', 'Lucida Console',
+						'Lucida Sans Unicode', 'Microsoft Sans Serif', 'Palatino Linotype',
+						'Tahoma', 'Times', 'Times New Roman', 'Trebuchet MS', 'Verdana',
+						'Comic Sans MS', 'Papyrus', 'Wingdings', 'Symbol',
+						'Monaco', 'Menlo', 'Consolas', 'SF Pro', 'SF Mono',
+						'Roboto', 'Noto Sans', 'Fira Code', 'JetBrains Mono',
+						'Ubuntu', 'Cantarell', 'DejaVu Sans', 'Liberation Mono',
+						'Segoe UI', 'Segoe UI Symbol', 'Apple Color Emoji',
+						'Noto Color Emoji', 'Segoe UI Emoji', 'MS Gothic',
+						'MS PGothic', 'Yu Gothic', 'Hiragino Sans',
+						'Futura', 'Optima', 'Baskerville', 'Didot', 'Gill Sans',
+						'American Typewriter', 'Andale Mono', 'Copperplate',
+					];
+					const span = document.createElement('span');
+					span.style.position = 'absolute';
+					span.style.left = '-9999px';
+					span.style.fontSize = '72px';
+					span.textContent = 'mmmmmmmmmmlli';
+					document.body.appendChild(span);
+					const baseWidths = {};
+					baseFonts.forEach(f => {
+						span.style.fontFamily = f;
+						baseWidths[f] = span.offsetWidth;
+					});
+					const detected = [];
+					testFonts.forEach(font => {
+						for (const base of baseFonts) {
+							span.style.fontFamily = `'${font}', ${base}`;
+							if (span.offsetWidth !== baseWidths[base]) {
+								detected.push(font);
+								break;
+							}
+						}
+					});
+					document.body.removeChild(span);
+					if (detected.length > 0) {
+						set('fonts', row("Count", detected.length) + row("Fonts", detected.join(', ')));
+					} else {
+						hide('.fonts');
+					}
+				} catch (e) {
+					hide('.fonts');
+				}
+
+				// --- Speech Synthesis Voices ---
+				try {
+					const loadVoices = () => {
+						const voices = speechSynthesis.getVoices();
+						if (voices.length > 0) {
+							let voiceInfo = row("Count", voices.length);
+							const langs = [...new Set(voices.map(v => v.lang))];
+							voiceInfo += row("Languages", langs.join(', '));
+							const localVoices = voices.filter(v => v.localService);
+							voiceInfo += row("Local Voices", localVoices.length);
+							voiceInfo += row("Remote Voices", voices.length - localVoices.length);
+							voices.forEach(v => {
+								voiceInfo += row(v.name, v.lang + (v.default ? ' (default)' : '') + (v.localService ? ' [local]' : ' [remote]'));
+							});
+							set('speechVoices', voiceInfo);
+						} else {
+							hide('.speechVoices');
+						}
+					};
+					if (speechSynthesis.getVoices().length > 0) {
+						loadVoices();
+					} else {
+						speechSynthesis.onvoiceschanged = loadVoices;
+						setTimeout(() => {
+							if (!document.getElementById('speechVoices').innerHTML) hide('.speechVoices');
+						}, 3000);
+					}
+				} catch (e) {
+					hide('.speechVoices');
+				}
+
+				// --- Permissions API ---
+				if (navigator.permissions) {
+					const permNames = [
+						'geolocation', 'notifications', 'push', 'midi',
+						'camera', 'microphone', 'background-fetch',
+						'background-sync', 'persistent-storage',
+						'accelerometer', 'gyroscope', 'magnetometer',
+						'clipboard-read', 'clipboard-write',
+						'screen-wake-lock', 'display-capture',
+						'window-management',
+					];
+					Promise.allSettled(
+						permNames.map(name =>
+							navigator.permissions.query({ name }).then(
+								result => ({ name, state: result.state }),
+								() => null
+							)
+						)
+					).then(results => {
+						let permInfo = '';
+						results.forEach(r => {
+							if (r.value) permInfo += row(r.value.name, r.value.state);
+						});
+						if (permInfo) {
+							set('permissions', permInfo);
+						} else {
+							hide('.permissions');
+						}
+					});
+				} else {
+					hide('.permissions');
+				}
+
+				// --- Timing / Performance ---
+				try {
+					const nav = performance.getEntriesByType('navigation')[0];
+					let timingInfo = '';
+					if (nav) {
+						timingInfo += row("DNS Lookup", (nav.domainLookupEnd - nav.domainLookupStart).toFixed(2) + " ms");
+						timingInfo += row("TCP Connect", (nav.connectEnd - nav.connectStart).toFixed(2) + " ms");
+						timingInfo += row("TLS Handshake", (nav.secureConnectionStart > 0 ? (nav.connectEnd - nav.secureConnectionStart).toFixed(2) + " ms" : "N/A"));
+						timingInfo += row("Response Time", (nav.responseEnd - nav.requestStart).toFixed(2) + " ms");
+						timingInfo += row("DOM Interactive", nav.domInteractive.toFixed(2) + " ms");
+						timingInfo += row("DOM Complete", nav.domComplete.toFixed(2) + " ms");
+						timingInfo += row("Transfer Size", (nav.transferSize / 1024).toFixed(2) + " KB");
+						timingInfo += row("Encoded Size", (nav.encodedBodySize / 1024).toFixed(2) + " KB");
+						timingInfo += row("Decoded Size", (nav.decodedBodySize / 1024).toFixed(2) + " KB");
+						timingInfo += row("Protocol", nav.nextHopProtocol);
+					}
+					// performance.now() precision — reduced precision indicates privacy mode
+					const t1 = performance.now();
+					const t2 = performance.now();
+					const precision = t2 - t1;
+					const pStr = precision.toString();
+					const decimals = pStr.includes('.') ? pStr.split('.')[1].length : 0;
+					timingInfo += row("Timer Precision", decimals + " decimal places");
+					timingInfo += row("Timer Resolution", precision.toFixed(6) + " ms");
+					if (timingInfo) {
+						set('timing', timingInfo);
+					} else {
+						hide('.timing');
+					}
+				} catch (e) {
+					hide('.timing');
+				}
+
+				// --- Math Fingerprint (browser-specific float behavior) ---
+				try {
+					const mathResults = {
+						'acos(-1)':       Math.acos(-1),
+						'acosh(2e308)':   Math.acosh(2e308),
+						'asin(0.5)':      Math.asin(0.5),
+						'atan(2)':        Math.atan(2),
+						'atanh(0.5)':     Math.atanh(0.5),
+						'cbrt(13)':       Math.cbrt(13),
+						'cosh(1)':        Math.cosh(1),
+						'expm1(1)':       Math.expm1(1),
+						'log1p(10)':      Math.log1p(10),
+						'sinh(1)':        Math.sinh(1),
+						'sqrt(2)':        Math.sqrt(2),
+						'tanh(1)':        Math.tanh(1),
+						'tan(-1e300)':    Math.tan(-1e300),
+						'pow(PI, -100)':  Math.pow(Math.PI, -100),
+					};
+					let mathInfo = '';
+					for (const [expr, val] of Object.entries(mathResults)) {
+						mathInfo += row('Math.' + expr, val.toString());
+					}
+					// Create a hash of all math values
+					const mathStr = Object.values(mathResults).join(',');
+					let mathHash = 0;
+					for (let i = 0; i < mathStr.length; i++) {
+						mathHash = ((mathHash << 5) - mathHash) + mathStr.charCodeAt(i);
+						mathHash |= 0;
+					}
+					mathInfo += row("Combined Hash", mathHash.toString(16));
+					set('mathFingerprint', mathInfo);
+				} catch (e) {
+					hide('.mathFingerprint');
+				}
+
+				// --- Intl / Locale Details ---
+				try {
+					const dtf = Intl.DateTimeFormat().resolvedOptions();
+					const nf = Intl.NumberFormat().resolvedOptions();
+					const pr = Intl.PluralRules ? new Intl.PluralRules().resolvedOptions() : null;
+					const col = Intl.Collator ? new Intl.Collator().resolvedOptions() : null;
+					let intlHtml = '';
+					intlHtml += row("Calendar", dtf.calendar);
+					intlHtml += row("Numbering System", dtf.numberingSystem);
+					intlHtml += row("Hour Cycle", dtf.hourCycle || 'N/A');
+					intlHtml += row("UTC Offset", new Date().getTimezoneOffset() + " min");
+					intlHtml += row("Locale (DateTimeFormat)", dtf.locale);
+					intlHtml += row("Locale (NumberFormat)", nf.locale);
+					intlHtml += row("Currency Display", nf.style);
+					if (pr) intlHtml += row("Plural Type", pr.type);
+					if (col) {
+						intlHtml += row("Collation", col.collation);
+						intlHtml += row("Case First", col.caseFirst || 'false');
+						intlHtml += row("Sensitivity", col.sensitivity);
+					}
+					if (Intl.ListFormat) {
+						const lf = new Intl.ListFormat().resolvedOptions();
+						intlHtml += row("List Style", lf.style);
+						intlHtml += row("List Type", lf.type);
+					}
+					if (Intl.RelativeTimeFormat) {
+						const rtf = new Intl.RelativeTimeFormat().resolvedOptions();
+						intlHtml += row("RelTime Numeric", rtf.numeric);
+						intlHtml += row("RelTime Style", rtf.style);
+					}
+					set('intlInfo', intlHtml);
+				} catch (e) {
+					hide('.intlInfo');
+				}
+
+				// --- Media / Codec Support ---
+				try {
+					const v = document.createElement('video');
+					const a = document.createElement('audio');
+					const codecs = {
+						'H.264':       v.canPlayType('video/mp4; codecs="avc1.42E01E"'),
+						'H.265/HEVC':  v.canPlayType('video/mp4; codecs="hev1.1.6.L93.B0"'),
+						'VP8':         v.canPlayType('video/webm; codecs="vp8"'),
+						'VP9':         v.canPlayType('video/webm; codecs="vp9"'),
+						'AV1':         v.canPlayType('video/mp4; codecs="av01.0.01M.08"'),
+						'Theora':      v.canPlayType('video/ogg; codecs="theora"'),
+						'AAC':         a.canPlayType('audio/mp4; codecs="mp4a.40.2"'),
+						'MP3':         a.canPlayType('audio/mpeg'),
+						'Opus':        a.canPlayType('audio/ogg; codecs="opus"'),
+						'Vorbis':      a.canPlayType('audio/ogg; codecs="vorbis"'),
+						'FLAC':        a.canPlayType('audio/flac'),
+						'WAV':         a.canPlayType('audio/wav'),
+						'WebM Audio':  a.canPlayType('audio/webm; codecs="vorbis"'),
+						'ALAC':        a.canPlayType('audio/mp4; codecs="alac"'),
+						'AC-3':        a.canPlayType('audio/mp4; codecs="ac-3"'),
+						'E-AC-3':      a.canPlayType('audio/mp4; codecs="ec-3"'),
+					};
+					let codecInfo = '';
+					for (const [name, support] of Object.entries(codecs)) {
+						const s = support === 'probably' ? 'yes' : support === 'maybe' ? 'maybe' : 'no';
+						codecInfo += row(name, s);
+					}
+					// MediaSource support
+					codecInfo += row("MediaSource", typeof MediaSource !== 'undefined' ? 'yes' : 'no');
+					if (typeof MediaSource !== 'undefined' && MediaSource.isTypeSupported) {
+						codecInfo += row("MSE H.264", MediaSource.isTypeSupported('video/mp4; codecs="avc1.42E01E"') ? 'yes' : 'no');
+						codecInfo += row("MSE VP9", MediaSource.isTypeSupported('video/webm; codecs="vp9"') ? 'yes' : 'no');
+						codecInfo += row("MSE AV1", MediaSource.isTypeSupported('video/mp4; codecs="av01.0.01M.08"') ? 'yes' : 'no');
+					}
+					// DRM support
+					if (navigator.requestMediaKeySystemAccess) {
+						const drmSystems = [
+							['Widevine', 'com.widevine.alpha'],
+							['FairPlay', 'com.apple.fps'],
+							['PlayReady', 'com.microsoft.playready'],
+							['ClearKey', 'org.w3.clearkey'],
+						];
+						Promise.allSettled(drmSystems.map(([name, keySystem]) =>
+							navigator.requestMediaKeySystemAccess(keySystem, [{
+								initDataTypes: ['cenc'],
+								videoCapabilities: [{ contentType: 'video/mp4; codecs="avc1.42E01E"' }],
+							}]).then(() => ({ name, supported: true }), () => ({ name, supported: false }))
+						)).then(results => {
+							let drmInfo = '';
+							results.forEach(r => {
+								if (r.value) drmInfo += row('DRM: ' + r.value.name, r.value.supported ? 'yes' : 'no');
+							});
+							set('mediaCapabilities', codecInfo + drmInfo);
+						});
+					} else {
+						set('mediaCapabilities', codecInfo);
+					}
+				} catch (e) {
+					hide('.mediaCapabilities');
+				}
+
+				// --- Hardware APIs ---
+				try {
+					let hwInfo = '';
+					hwInfo += row("Bluetooth", 'bluetooth' in navigator ? 'available' : 'no');
+					hwInfo += row("USB", 'usb' in navigator ? 'available' : 'no');
+					hwInfo += row("Serial", 'serial' in navigator ? 'available' : 'no');
+					hwInfo += row("HID", 'hid' in navigator ? 'available' : 'no');
+					hwInfo += row("NFC", 'NDEFReader' in window ? 'available' : 'no');
+					hwInfo += row("Gamepad", 'getGamepads' in navigator ? 'available' : 'no');
+					hwInfo += row("Vibration", 'vibrate' in navigator ? 'available' : 'no');
+					hwInfo += row("Wake Lock", 'wakeLock' in navigator ? 'available' : 'no');
+					hwInfo += row("Ambient Light", 'AmbientLightSensor' in window ? 'available' : 'no');
+					hwInfo += row("Accelerometer", 'Accelerometer' in window ? 'available' : 'no');
+					hwInfo += row("Gyroscope", 'Gyroscope' in window ? 'available' : 'no');
+					hwInfo += row("Magnetometer", 'Magnetometer' in window ? 'available' : 'no');
+					hwInfo += row("Gravity Sensor", 'GravitySensor' in window ? 'available' : 'no');
+					hwInfo += row("Absolute Orient.", 'AbsoluteOrientationSensor' in window ? 'available' : 'no');
+					hwInfo += row("Relative Orient.", 'RelativeOrientationSensor' in window ? 'available' : 'no');
+					hwInfo += row("Linear Accel.", 'LinearAccelerationSensor' in window ? 'available' : 'no');
+					// Connected gamepads
+					try {
+						const gamepads = navigator.getGamepads();
+						let gpCount = 0;
+						for (const gp of gamepads) if (gp) gpCount++;
+						if (gpCount > 0) hwInfo += row("Gamepads Connected", gpCount);
+					} catch (e) {}
+					set('hardwareAPIs', hwInfo);
+				} catch (e) {
+					hide('.hardwareAPIs');
+				}
+
+				// --- Navigator properties ---
+				try {
+					let navInfo = '';
+					navInfo += row("Platform", navigator.platform || 'N/A');
+					navInfo += row("Vendor", navigator.vendor || 'N/A');
+					navInfo += row("Product", navigator.product || 'N/A');
+					navInfo += row("App Name", navigator.appName || 'N/A');
+					navInfo += row("App Code Name", navigator.appCodeName || 'N/A');
+					navInfo += row("App Version", navigator.appVersion || 'N/A');
+					navInfo += row("Build ID", navigator.buildID || 'N/A');
+					navInfo += row("Do Not Track", navigator.doNotTrack || 'N/A');
+					navInfo += row("Global Privacy", navigator.globalPrivacyControl != null ? (navigator.globalPrivacyControl ? 'on' : 'off') : 'N/A');
+					navInfo += row("Webdriver", navigator.webdriver ? 'yes' : 'no');
+					navInfo += row("User Activation", navigator.userActivation ? 'supported' : 'no');
+					// Client Hints
+					if (navigator.userAgentData) {
+						const uad = navigator.userAgentData;
+						navInfo += row("UA Brands", uad.brands.map(b => b.brand + ' v' + b.version).join(', '));
+						navInfo += row("UA Mobile", uad.mobile ? 'yes' : 'no');
+						navInfo += row("UA Platform", uad.platform);
+						if (uad.getHighEntropyValues) {
+							uad.getHighEntropyValues([
+								'architecture', 'bitness', 'model', 'platformVersion',
+								'fullVersionList', 'wow64'
+							]).then(hints => {
+								let hintInfo = '';
+								if (hints.architecture) hintInfo += row("Architecture", hints.architecture);
+								if (hints.bitness) hintInfo += row("Bitness", hints.bitness);
+								if (hints.model) hintInfo += row("Model", hints.model);
+								if (hints.platformVersion) hintInfo += row("Platform Version", hints.platformVersion);
+								if (hints.wow64 != null) hintInfo += row("WoW64", hints.wow64 ? 'yes' : 'no');
+								if (hints.fullVersionList) hintInfo += row("Full Versions", hints.fullVersionList.map(b => b.brand + ' ' + b.version).join(', '));
+								set('navigatorProps', navInfo + hintInfo);
+							}).catch(() => set('navigatorProps', navInfo));
+						} else {
+							set('navigatorProps', navInfo);
+						}
+					} else {
+						set('navigatorProps', navInfo);
+					}
+				} catch (e) {
+					hide('.navigatorProps');
+				}
+
+				// --- Input Devices ---
+				try {
+					let inputInfo = '';
+					inputInfo += row("Pointer (fine)", mq('(pointer: fine)') ? 'yes' : 'no');
+					inputInfo += row("Pointer (coarse)", mq('(pointer: coarse)') ? 'yes' : 'no');
+					inputInfo += row("Any Pointer (fine)", mq('(any-pointer: fine)') ? 'yes' : 'no');
+					inputInfo += row("Any Pointer (coarse)", mq('(any-pointer: coarse)') ? 'yes' : 'no');
+					inputInfo += row("Hover", mq('(hover: hover)') ? 'yes' : 'no');
+					inputInfo += row("Any Hover", mq('(any-hover: hover)') ? 'yes' : 'no');
+					if ('ontouchstart' in window) inputInfo += row("Touch Events", 'yes');
+					else inputInfo += row("Touch Events", 'no');
+					if ('PointerEvent' in window) inputInfo += row("Pointer Events", 'yes');
+					else inputInfo += row("Pointer Events", 'no');
+					// Keyboard layout detection hack
+					if (navigator.keyboard && navigator.keyboard.getLayoutMap) {
+						navigator.keyboard.getLayoutMap().then(layoutMap => {
+							let keys = [];
+							layoutMap.forEach((val, key) => { keys.push(key + '=' + val); });
+							inputInfo += row("Keyboard Layout Size", layoutMap.size + " keys");
+							// Detect QWERTY vs AZERTY vs QWERTZ
+							const q = layoutMap.get('KeyQ') || '';
+							const w = layoutMap.get('KeyW') || '';
+							const z = layoutMap.get('KeyZ') || '';
+							const y = layoutMap.get('KeyY') || '';
+							let layout = 'unknown';
+							if (q === 'q' && w === 'w' && z === 'z') layout = 'QWERTY';
+							else if (q === 'a' && w === 'z') layout = 'AZERTY';
+							else if (q === 'q' && w === 'w' && z === 'y') layout = 'QWERTZ';
+							inputInfo += row("Keyboard Layout", layout);
+							set('inputDevices', inputInfo);
+						}).catch(() => set('inputDevices', inputInfo));
+					} else {
+						set('inputDevices', inputInfo);
+					}
+				} catch (e) {
+					hide('.inputDevices');
+				}
+
+				// --- Window / Runtime ---
+				try {
+					let winInfo = '';
+					winInfo += row("Inner Size", window.innerWidth + 'x' + window.innerHeight);
+					winInfo += row("Outer Size", window.outerWidth + 'x' + window.outerHeight);
+					winInfo += row("Screen X/Y", window.screenX + ', ' + window.screenY);
+					winInfo += row("Scroll Bars", window.innerWidth !== document.documentElement.clientWidth ? 'visible' : 'hidden');
+					winInfo += row("History Length", window.history.length);
+					winInfo += row("SharedArrayBuffer", typeof SharedArrayBuffer !== 'undefined' ? 'available' : 'no');
+					winInfo += row("Cross-Origin Isolated", window.crossOriginIsolated ? 'yes' : 'no');
+					winInfo += row("Secure Context", window.isSecureContext ? 'yes' : 'no');
+					winInfo += row("IndexedDB", 'indexedDB' in window ? 'available' : 'no');
+					winInfo += row("Web Workers", typeof Worker !== 'undefined' ? 'available' : 'no');
+					winInfo += row("Shared Workers", typeof SharedWorker !== 'undefined' ? 'available' : 'no');
+					winInfo += row("WebGL2", !!document.createElement('canvas').getContext('webgl2') ? 'available' : 'no');
+					winInfo += row("OffscreenCanvas", typeof OffscreenCanvas !== 'undefined' ? 'available' : 'no');
+					winInfo += row("WebGPU", 'gpu' in navigator ? 'available' : 'no');
+					winInfo += row("WebTransport", typeof WebTransport !== 'undefined' ? 'available' : 'no');
+					winInfo += row("WebCodecs", typeof VideoDecoder !== 'undefined' ? 'available' : 'no');
+					winInfo += row("Compression Streams", typeof CompressionStream !== 'undefined' ? 'available' : 'no');
+					winInfo += row("File System Access", 'showOpenFilePicker' in window ? 'available' : 'no');
+					winInfo += row("EyeDropper", 'EyeDropper' in window ? 'available' : 'no');
+					winInfo += row("Barcode Detector", 'BarcodeDetector' in window ? 'available' : 'no');
+					winInfo += row("Face Detector", 'FaceDetector' in window ? 'available' : 'no');
+					winInfo += row("Text Detector", 'TextDetector' in window ? 'available' : 'no');
+					// Error stack format detection — reveals browser engine
+					try {
+						null.x;
+					} catch (e) {
+						const stack = e.stack || '';
+						let engine = 'unknown';
+						if (stack.includes('at ')) engine = 'V8 (Chrome/Edge/Node)';
+						else if (stack.includes('@')) engine = 'SpiderMonkey (Firefox)';
+						else if (stack.includes('module code')) engine = 'JavaScriptCore (Safari)';
+						winInfo += row("JS Engine (via stack)", engine);
+					}
+					set('windowProps', winInfo);
+				} catch (e) {
+					hide('.windowProps');
+				}
+
+				// --- CSS Support Detection ---
+				try {
+					const cssChecks = {
+						'Container Queries': CSS.supports('container-type', 'inline-size'),
+						'Subgrid':           CSS.supports('grid-template-rows', 'subgrid'),
+						'Nesting':           CSS.supports('selector(&)'),
+						':has()':            CSS.supports('selector(:has(*))'),
+						'@layer':            CSS.supports('at(layer)') || (() => { try { document.createElement('style').sheet; return CSS.supports('(width: 1px)'); } catch(e) { return false; } })(),
+						'color-mix()':       CSS.supports('color', 'color-mix(in srgb, red, blue)'),
+						'oklch()':           CSS.supports('color', 'oklch(50% 0.2 240)'),
+						'lch()':             CSS.supports('color', 'lch(50% 50 240)'),
+						'Anchor Positioning':CSS.supports('position-anchor', '--a'),
+						'View Transitions':  CSS.supports('view-transition-name', 'x'),
+						'Scroll Timeline':   CSS.supports('animation-timeline', 'scroll()'),
+						'text-wrap: balance':CSS.supports('text-wrap', 'balance'),
+						'font-size-adjust':  CSS.supports('font-size-adjust', '0.5'),
+						'backdrop-filter':   CSS.supports('backdrop-filter', 'blur(1px)'),
+						'aspect-ratio':      CSS.supports('aspect-ratio', '1'),
+						'accent-color':      CSS.supports('accent-color', 'red'),
+						'field-sizing':      CSS.supports('field-sizing', 'content'),
+						'color-scheme':      CSS.supports('color-scheme', 'dark'),
+						'overscroll-behavior': CSS.supports('overscroll-behavior', 'contain'),
+						'content-visibility': CSS.supports('content-visibility', 'auto'),
+						'Color Gamut (sRGB)':  mq('(color-gamut: srgb)'),
+						'Color Gamut (P3)':    mq('(color-gamut: p3)'),
+						'Color Gamut (Rec2020)': mq('(color-gamut: rec2020)'),
+						'Inverted Colors':   mq('(inverted-colors: inverted)'),
+						'Prefers Contrast':  mq('(prefers-contrast: more)') ? 'more' : mq('(prefers-contrast: less)') ? 'less' : false,
+						'Prefers Transparency': mq('(prefers-reduced-transparency: reduce)'),
+						'Scripting':         mq('(scripting: enabled)'),
+					};
+					let cssInfo = '';
+					for (const [name, supported] of Object.entries(cssChecks)) {
+						cssInfo += row(name, supported ? 'yes' : 'no');
+					}
+					set('cssSupport', cssInfo);
+				} catch (e) {
+					hide('.cssSupport');
 				}
 			}
 		</script>
