@@ -89,6 +89,23 @@ a:active  { color: #009966; background: black; }
   display: none;
 }
 
+.intro {
+  margin-bottom: 1.5em;
+  font-size: 0.85em;
+  line-height: 1.5;
+  color: #66b399;
+}
+
+.intro p {
+  margin: 0 0 0.5em;
+}
+
+.intro .warning {
+  color: #b38f00;
+  border-left: 3px solid #b38f00;
+  padding-left: 0.75em;
+}
+
 .section-group {
   margin-top: 1.5em;
   margin-bottom: 0.5em;
@@ -144,6 +161,11 @@ canvas {
      |___/
 
 </pre>
+		</div>
+
+		<div class="intro">
+			<p>This page probes your browser using only client-side JavaScript to reveal what websites can learn about your system, hardware, network, and identity, all without installing anything or asking for permission.</p>
+			<p class="warning">Heads up: some tests may trigger browser prompts, pop-up warnings, or brief CPU/GPU spikes as benchmarks run. WebRTC, STUN, and network probes will make outbound connections. No data is collected or sent to any server beyond what is listed (Cloudflare trace, ipapi.co for GeoIP). All processing happens locally in your browser.</p>
 		</div>
 
 		<canvas id="canvas" width="0" height="0"></canvas>
