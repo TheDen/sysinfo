@@ -51,6 +51,25 @@ a:active  { color: #009966; background: black; }
   font-size: 0.85em;
   text-transform: uppercase;
   letter-spacing: 0.1em;
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.section > p::after {
+  content: '▾';
+  font-size: 0.75em;
+  transition: transform 0.2s;
+}
+
+.section.collapsed > p::after {
+  transform: rotate(-90deg);
+}
+
+.section.collapsed > .info {
+  display: none;
 }
 
 .info {
@@ -113,7 +132,7 @@ a:active  { color: #009966; background: black; }
   border-bottom: 1px solid #1a3d2e;
   color: #33cc99;
   font-weight: bold;
-  font-size: 0.75em;
+  font-size: 1em;
   text-transform: uppercase;
   letter-spacing: 0.15em;
 }
@@ -180,6 +199,27 @@ canvas {
 }
 
 #resultsWrap { display: none; }
+
+#exportWrap {
+  display: none;
+  text-align: center;
+  margin: 1.5em 0;
+}
+#exportWrap button {
+  margin: 0 0.4em;
+  padding: 0.5em 1.8em;
+  font-family: monospace;
+  font-size: 0.95em;
+  font-weight: bold;
+  color: black;
+  background: #009966;
+  border: 2px solid #33cc99;
+  border-radius: 4px;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+#exportWrap button:hover { background: #33cc99; }
 		</style>
 	</head>
 	<body>
@@ -219,6 +259,11 @@ canvas {
 		<div id="progressWrap">
 			<div id="progressBar"><div id="progressFill"></div></div>
 			<div id="progressText">Starting...</div>
+		</div>
+
+		<div id="exportWrap">
+			<button onclick="copyResults()">Copy to Clipboard</button>
+			<button onclick="exportJSON()">Export JSON</button>
 		</div>
 
 		<canvas id="canvas" width="0" height="0"></canvas>
@@ -547,6 +592,12 @@ canvas {
 				if (el) el.style.display = "none";
 			}
 
+			// Collapsible sections
+			document.addEventListener('click', function(e) {
+				const p = e.target.closest('.section > p');
+				if (p) p.parentElement.classList.toggle('collapsed');
+			});
+
 			// Track which sections have been finalized
 			const _done = new Set();
 			function set(id, html) {
@@ -562,6 +613,7 @@ canvas {
 					if (_completedSections >= _totalSections) {
 						setTimeout(() => {
 							document.getElementById('progressWrap').style.display = 'none';
+							document.getElementById('exportWrap').style.display = 'block';
 							const btn = document.getElementById('runBtn');
 							if (btn) {
 								btn.textContent = 'Scan Again';
@@ -574,6 +626,78 @@ canvas {
 
 			function row(label, value) {
 				return `<pre><span class="kv-label">${label}</span>  <span class="kv-value">${value}</span></pre>`;
+			}
+
+			function gatherResults() {
+				const data = {};
+				document.querySelectorAll('#resultsWrap .section:not([style*="display:none"])').forEach(sec => {
+					const title = sec.querySelector('p')?.textContent?.trim() || 'Unknown';
+					const info = sec.querySelector('.info');
+					if (!info) return;
+					const entries = {};
+					info.querySelectorAll('pre').forEach(pre => {
+						const label = pre.querySelector('.kv-label')?.textContent?.trim();
+						const value = pre.querySelector('.kv-value')?.textContent?.trim();
+						if (label) entries[label] = value || '';
+					});
+					if (Object.keys(entries).length === 0) {
+						entries['_raw'] = info.textContent.trim();
+					}
+					data[title] = entries;
+				});
+				return data;
+			}
+
+			function resultsToText() {
+				const data = gatherResults();
+				let lines = [];
+				for (const [section, entries] of Object.entries(data)) {
+					lines.push('=== ' + section + ' ===');
+					if (entries['_raw']) {
+						lines.push(entries['_raw']);
+					} else {
+						for (const [k, v] of Object.entries(entries)) {
+							lines.push('  ' + k + ': ' + v);
+						}
+					}
+					lines.push('');
+				}
+				return lines.join('\n');
+			}
+
+			function copyResults() {
+				const text = resultsToText();
+				navigator.clipboard.writeText(text).then(() => {
+					const btn = event.target;
+					const orig = btn.textContent;
+					btn.textContent = 'Copied!';
+					setTimeout(() => btn.textContent = orig, 1500);
+				}).catch(() => {
+					// Fallback
+					const ta = document.createElement('textarea');
+					ta.value = text;
+					ta.style.position = 'fixed';
+					ta.style.opacity = '0';
+					document.body.appendChild(ta);
+					ta.select();
+					document.execCommand('copy');
+					document.body.removeChild(ta);
+					const btn = event.target;
+					const orig = btn.textContent;
+					btn.textContent = 'Copied!';
+					setTimeout(() => btn.textContent = orig, 1500);
+				});
+			}
+
+			function exportJSON() {
+				const data = gatherResults();
+				const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+				const url = URL.createObjectURL(blob);
+				const a = document.createElement('a');
+				a.href = url;
+				a.download = 'sysinfo-' + new Date().toISOString().slice(0, 19).replace(/:/g, '-') + '.json';
+				a.click();
+				URL.revokeObjectURL(url);
 			}
 
 			// --- Browser & OS version parsing ---
@@ -636,6 +760,7 @@ canvas {
 				btn.disabled = true;
 				btn.textContent = 'Scanning...';
 				document.getElementById('progressWrap').style.display = 'block';
+				document.getElementById('exportWrap').style.display = 'none';
 				document.getElementById('resultsWrap').style.display = 'block';
 
 				// Reset progress state for re-runs
