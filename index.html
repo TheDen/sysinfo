@@ -370,6 +370,61 @@ canvas {
 			<div class="info" id="workerProbe"></div>
 		</div>
 
+		<div class="section privacyScore">
+			<p>Privacy Score</p>
+			<div class="info" id="privacyScore"></div>
+		</div>
+
+		<div class="section trackingAPIs">
+			<p>Tracking Surface</p>
+			<div class="info" id="trackingAPIs"></div>
+		</div>
+
+		<div class="section storageLeaks">
+			<p>Storage / State Leaks</p>
+			<div class="info" id="storageLeaks"></div>
+		</div>
+
+		<div class="section crossOriginLeaks">
+			<p>Cross-Origin Leaks</p>
+			<div class="info" id="crossOriginLeaks"></div>
+		</div>
+
+		<div class="section fingerprintHash">
+			<p>Combined Fingerprint</p>
+			<div class="info" id="fingerprintHash"></div>
+		</div>
+
+		<div class="section adblockDetect">
+			<p>Ad / Tracker Blocking</p>
+			<div class="info" id="adblockDetect"></div>
+		</div>
+
+		<div class="section privacyHeaders">
+			<p>Privacy Headers</p>
+			<div class="info" id="privacyHeaders"></div>
+		</div>
+
+		<div class="section browserPrivacy">
+			<p>Browser Privacy Features</p>
+			<div class="info" id="browserPrivacy"></div>
+		</div>
+
+		<div class="section supercookies">
+			<p>Supercookie Vectors</p>
+			<div class="info" id="supercookies"></div>
+		</div>
+
+		<div class="section socialLeaks">
+			<p>Social / Login Leaks</p>
+			<div class="info" id="socialLeaks"></div>
+		</div>
+
+		<div class="section uniquenessEstimate">
+			<p>Uniqueness Estimate</p>
+			<div class="info" id="uniquenessEstimate"></div>
+		</div>
+
 		<div class="footer"><a href="https://theden.sh" target="_blank" rel="noopener">/TheDen.sh</a></div>
 
 		<script>
@@ -1797,6 +1852,950 @@ canvas {
 				} catch (e) {
 					hide('.workerProbe');
 				}
+
+				// ============================================================
+				// PRIVACY-FOCUSED CHECKS
+				// ============================================================
+
+				// Collect fingerprint signals for later hashing
+				const fpSignals = {};
+
+				// --- Tracking Surface ---
+				try {
+					let trackInfo = '';
+					// Do Not Track
+					const dnt = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+					trackInfo += row("Do Not Track", dnt === '1' ? 'enabled' : dnt === '0' ? 'disabled (explicit)' : 'not set');
+					fpSignals.dnt = dnt;
+
+					// Global Privacy Control
+					const gpc = navigator.globalPrivacyControl;
+					trackInfo += row("Global Privacy Control", gpc === true ? 'enabled' : gpc === false ? 'disabled' : 'not supported');
+					fpSignals.gpc = gpc;
+
+					// Cookie settings
+					trackInfo += row("Cookies Enabled", navigator.cookieEnabled ? 'yes' : 'no');
+					fpSignals.cookies = navigator.cookieEnabled;
+
+					// Third-party cookie test
+					try {
+						document.cookie = '_sysinfo_test=1; SameSite=None; Secure';
+						const hasCookie = document.cookie.includes('_sysinfo_test');
+						trackInfo += row("First-Party Cookies", hasCookie ? 'working' : 'blocked');
+						document.cookie = '_sysinfo_test=; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+					} catch (e) {
+						trackInfo += row("First-Party Cookies", 'blocked (exception)');
+					}
+
+					// Partitioned cookies (CHIPS)
+					trackInfo += row("Partitioned Cookies", 'cookieStore' in window ? 'API available' : 'not available');
+
+					// Beacon API (tracking vector)
+					trackInfo += row("Beacon API", 'sendBeacon' in navigator ? 'available' : 'blocked');
+
+					// Reporting API
+					trackInfo += row("Reporting API", typeof ReportingObserver !== 'undefined' ? 'available' : 'not available');
+
+					// Attribution Reporting
+					trackInfo += row("Attribution Reporting", document.featurePolicy ?
+						(document.featurePolicy.allowsFeature('attribution-reporting') ? 'allowed' : 'denied') : 'unknown');
+
+					// Topics API (Privacy Sandbox)
+					trackInfo += row("Topics API", 'browsingTopics' in document ? 'available' : 'not available');
+
+					// Protected Audience (FLEDGE)
+					trackInfo += row("Protected Audience", 'joinAdInterestGroup' in navigator ? 'available' : 'not available');
+
+					// Private State Tokens (Trust Tokens)
+					trackInfo += row("Private State Tokens", 'hasPrivateToken' in document ? 'available' : 'not available');
+
+					// Shared Storage API
+					trackInfo += row("Shared Storage", 'sharedStorage' in window ? 'available' : 'not available');
+
+					// Fenced Frames
+					trackInfo += row("Fenced Frames", typeof HTMLFencedFrameElement !== 'undefined' ? 'available' : 'not available');
+
+					// Client Hints exposure
+					if (navigator.userAgentData) {
+						trackInfo += row("UA Client Hints", 'exposed (high entropy possible)');
+					} else {
+						trackInfo += row("UA Client Hints", 'not exposed');
+					}
+
+					// Navigation timing (referer leak)
+					trackInfo += row("Referrer", document.referrer || '(empty)');
+
+					// Performance observer types available
+					if (typeof PerformanceObserver !== 'undefined') {
+						try {
+							const poTypes = PerformanceObserver.supportedEntryTypes || [];
+							trackInfo += row("PerfObserver Types", poTypes.join(', ') || 'none');
+						} catch (e) {}
+					}
+
+					set('trackingAPIs', trackInfo);
+				} catch (e) {
+					hide('.trackingAPIs');
+				}
+
+				// --- Storage / State Leaks ---
+				try {
+					let storeInfo = '';
+
+					// localStorage
+					try {
+						localStorage.setItem('_sysinfo_test', '1');
+						localStorage.removeItem('_sysinfo_test');
+						storeInfo += row("localStorage", 'available');
+					} catch (e) {
+						storeInfo += row("localStorage", 'blocked');
+					}
+
+					// sessionStorage
+					try {
+						sessionStorage.setItem('_sysinfo_test', '1');
+						sessionStorage.removeItem('_sysinfo_test');
+						storeInfo += row("sessionStorage", 'available');
+					} catch (e) {
+						storeInfo += row("sessionStorage", 'blocked');
+					}
+
+					// IndexedDB
+					try {
+						const idbReq = indexedDB.open('_sysinfo_test');
+						idbReq.onsuccess = () => { idbReq.result.close(); indexedDB.deleteDatabase('_sysinfo_test'); };
+						storeInfo += row("IndexedDB", 'available');
+					} catch (e) {
+						storeInfo += row("IndexedDB", 'blocked');
+					}
+
+					// Cache API
+					storeInfo += row("Cache API", 'caches' in window ? 'available' : 'blocked');
+
+					// CookieStore API
+					storeInfo += row("CookieStore API", 'cookieStore' in window ? 'available' : 'not available');
+
+					// File System API (OPFS)
+					if (navigator.storage && navigator.storage.getDirectory) {
+						navigator.storage.getDirectory().then(() => {
+							const current = document.getElementById('storageLeaks').innerHTML;
+							set('storageLeaks', current + row("Origin Private FS", 'available'));
+						}).catch(() => {
+							const current = document.getElementById('storageLeaks').innerHTML;
+							set('storageLeaks', current + row("Origin Private FS", 'blocked'));
+						});
+					}
+
+					// BroadcastChannel (cross-tab comms)
+					try {
+						const bc = new BroadcastChannel('_sysinfo_test');
+						bc.close();
+						storeInfo += row("BroadcastChannel", 'available');
+					} catch (e) {
+						storeInfo += row("BroadcastChannel", 'blocked');
+					}
+
+					// SharedWorker (cross-tab state)
+					storeInfo += row("SharedWorker", typeof SharedWorker !== 'undefined' ? 'available' : 'not available');
+
+					// Service Worker
+					storeInfo += row("Service Worker", 'serviceWorker' in navigator ? 'available' : 'blocked');
+
+					// Web Locks (cross-tab coordination)
+					storeInfo += row("Web Locks API", 'locks' in navigator ? 'available' : 'not available');
+
+					// Storage buckets
+					storeInfo += row("Storage Buckets", 'storageBuckets' in navigator ? 'available' : 'not available');
+
+					// Measure actual storage in use
+					const storageKeys = ['localStorage', 'sessionStorage'];
+					try {
+						const lsSize = JSON.stringify(localStorage).length;
+						storeInfo += row("localStorage Size", (lsSize / 1024).toFixed(1) + " KB (" + localStorage.length + " keys)");
+					} catch (e) {}
+					try {
+						const ssSize = JSON.stringify(sessionStorage).length;
+						storeInfo += row("sessionStorage Size", (ssSize / 1024).toFixed(1) + " KB (" + sessionStorage.length + " keys)");
+					} catch (e) {}
+
+					set('storageLeaks', storeInfo);
+				} catch (e) {
+					hide('.storageLeaks');
+				}
+
+				// --- Cross-Origin Leaks ---
+				try {
+					let xoInfo = '';
+
+					// CORS mode detection
+					xoInfo += row("Cross-Origin Isolated", window.crossOriginIsolated ? 'yes' : 'no');
+
+					// SharedArrayBuffer (requires COOP/COEP)
+					xoInfo += row("SharedArrayBuffer", typeof SharedArrayBuffer !== 'undefined' ? 'available (COOP/COEP)' : 'blocked');
+
+					// performance.now() resolution (reduced in cross-origin contexts)
+					const t1 = performance.now();
+					const t2 = performance.now();
+					const resolution = t2 - t1;
+					const decimals = resolution.toString().includes('.') ? resolution.toString().split('.')[1].length : 0;
+					xoInfo += row("Timer Resolution", resolution.toFixed(6) + " ms (" + decimals + " decimals)");
+					xoInfo += row("Timer Degraded?", decimals < 2 ? 'likely (privacy protection)' : 'full precision');
+					fpSignals.timerResolution = decimals;
+
+					// window.opener detection
+					xoInfo += row("window.opener", window.opener ? 'set (referrer leak)' : 'null');
+
+					// window.name persistence (cross-origin state vector)
+					xoInfo += row("window.name", window.name ? '"' + window.name.substring(0, 50) + '"' : '(empty)');
+
+					// Detect COOP
+					try {
+						const w = window.open('', '_blank');
+						if (w) {
+							xoInfo += row("Popup Blocking", 'not blocked');
+							w.close();
+						} else {
+							xoInfo += row("Popup Blocking", 'blocked');
+						}
+					} catch (e) {
+						xoInfo += row("Popup Blocking", 'blocked (exception)');
+					}
+
+					// Document.domain
+					xoInfo += row("document.domain", document.domain || '(empty)');
+
+					// Fetch metadata headers support (Sec-Fetch-*)
+					xoInfo += row("Fetch Metadata", 'Sec-Fetch-* headers' + (window.isSecureContext ? ' (secure ctx)' : ' (insecure ctx)'));
+
+					// Cross-origin resource timing
+					const resTiming = performance.getEntriesByType('resource');
+					const crossOriginRes = resTiming.filter(r => {
+						try { return new URL(r.name).origin !== location.origin; } catch(e) { return false; }
+					});
+					const leakyRes = crossOriginRes.filter(r => r.responseStart > 0);
+					xoInfo += row("Cross-Origin Resources", crossOriginRes.length);
+					xoInfo += row("w/ Timing Exposed", leakyRes.length + " (Timing-Allow-Origin)");
+
+					// Spectre mitigations
+					xoInfo += row("Site Isolation", typeof SharedArrayBuffer !== 'undefined' ? 'likely enabled' : 'possibly disabled');
+
+					set('crossOriginLeaks', xoInfo);
+				} catch (e) {
+					hide('.crossOriginLeaks');
+				}
+
+				// --- Combined Fingerprint ---
+				try {
+					const fpAsync = async () => {
+						let fpInfo = '';
+						const signals = [];
+
+						// Screen fingerprint
+						const screenFP = [screen.width, screen.height, screen.colorDepth, window.devicePixelRatio].join('x');
+						signals.push('screen:' + screenFP);
+						fpInfo += row("Screen", screenFP);
+
+						// Timezone fingerprint
+						const tzFP = Intl.DateTimeFormat().resolvedOptions().timeZone + '|' + new Date().getTimezoneOffset();
+						signals.push('tz:' + tzFP);
+						fpInfo += row("Timezone", tzFP);
+
+						// Language fingerprint
+						const langFP = (navigator.languages || [navigator.language]).join(',');
+						signals.push('lang:' + langFP);
+						fpInfo += row("Languages", langFP);
+
+						// Platform
+						signals.push('platform:' + navigator.platform);
+						fpInfo += row("Platform", navigator.platform);
+
+						// Hardware
+						const hwFP = navigator.hardwareConcurrency + '|' + (navigator.deviceMemory || '?') + '|' + navigator.maxTouchPoints;
+						signals.push('hw:' + hwFP);
+						fpInfo += row("Hardware", hwFP);
+
+						// WebGL renderer
+						try {
+							const c = document.createElement('canvas');
+							const gl = c.getContext('webgl');
+							if (gl) {
+								const dbg = gl.getExtension('WEBGL_debug_renderer_info');
+								if (dbg) {
+									const renderer = gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL);
+									signals.push('gpu:' + renderer);
+									fpInfo += row("GPU Renderer", renderer.substring(0, 60));
+								}
+							}
+						} catch (e) {}
+
+						// Canvas hash
+						try {
+							const c = document.createElement('canvas');
+							c.width = 200; c.height = 50;
+							const ctx = c.getContext('2d');
+							ctx.textBaseline = 'top';
+							ctx.font = '14px Arial';
+							ctx.fillText('fingerprint \ud83d\ude00\ud83c\udf0e', 2, 2);
+							const dataUrl = c.toDataURL();
+							let hash = 0;
+							for (let i = 0; i < dataUrl.length; i++) {
+								hash = ((hash << 5) - hash) + dataUrl.charCodeAt(i); hash |= 0;
+							}
+							signals.push('canvas:' + hash);
+							fpInfo += row("Canvas Hash", hash.toString(16));
+						} catch (e) {}
+
+						// Audio fingerprint
+						try {
+							const actx = new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(1, 44100, 44100);
+							const osc = actx.createOscillator();
+							osc.type = 'triangle';
+							osc.frequency.setValueAtTime(10000, actx.currentTime);
+							const comp = actx.createDynamicsCompressor();
+							osc.connect(comp);
+							comp.connect(actx.destination);
+							osc.start(0);
+							const rendered = await actx.startRendering();
+							const data = rendered.getChannelData(0);
+							let audioSum = 0;
+							for (let i = 4500; i < 5000; i++) audioSum += Math.abs(data[i]);
+							signals.push('audio:' + audioSum.toFixed(6));
+							fpInfo += row("Audio Hash", audioSum.toFixed(6));
+						} catch (e) {}
+
+						// Font count as signal
+						try {
+							const baseFonts = ['monospace', 'sans-serif', 'serif'];
+							const testFonts = ['Arial','Courier New','Georgia','Helvetica','Times New Roman','Verdana','Comic Sans MS','Impact','Trebuchet MS','Palatino'];
+							const span = document.createElement('span');
+							span.style.cssText = 'position:absolute;left:-9999px;font-size:72px';
+							span.textContent = 'mmmmmmmmlli';
+							document.body.appendChild(span);
+							const baseW = {};
+							baseFonts.forEach(f => { span.style.fontFamily = f; baseW[f] = span.offsetWidth; });
+							let fontCount = 0;
+							testFonts.forEach(font => {
+								for (const base of baseFonts) {
+									span.style.fontFamily = `'${font}',${base}`;
+									if (span.offsetWidth !== baseW[base]) { fontCount++; break; }
+								}
+							});
+							document.body.removeChild(span);
+							signals.push('fonts:' + fontCount);
+							fpInfo += row("Font Matches", fontCount + "/10 test fonts");
+						} catch (e) {}
+
+						// Media preferences
+						const prefFP = [
+							mq('(prefers-color-scheme: dark)') ? 'dark' : 'light',
+							mq('(prefers-reduced-motion: reduce)') ? 'reduced-motion' : 'motion',
+							mq('(forced-colors: active)') ? 'forced-colors' : 'normal-colors',
+							mq('(prefers-contrast: more)') ? 'high-contrast' : 'normal-contrast',
+						].join('|');
+						signals.push('prefs:' + prefFP);
+						fpInfo += row("Preferences", prefFP);
+
+						// Combine all signals into a hash
+						const combined = signals.join('|||');
+						const encoder = new TextEncoder();
+						const data = encoder.encode(combined);
+						const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+						const hashArray = Array.from(new Uint8Array(hashBuffer));
+						const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+						fpInfo += row("Signal Count", signals.length);
+						fpInfo += row("SHA-256 Fingerprint", hashHex.substring(0, 32) + '...');
+						fpInfo += row("Full Hash", hashHex);
+
+						set('fingerprintHash', fpInfo);
+					};
+					fpAsync().catch(() => hide('.fingerprintHash'));
+				} catch (e) {
+					hide('.fingerprintHash');
+				}
+
+				// --- Ad / Tracker Blocking ---
+				try {
+					set('adblockDetect', row("Status", "probing..."));
+					const adblockAsync = async () => {
+						let adInfo = '';
+						const probes = [];
+
+						// Common ad/tracker domains
+						const adDomains = [
+							{ name: 'Google Ads', url: 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js' },
+							{ name: 'Google Analytics', url: 'https://www.google-analytics.com/analytics.js' },
+							{ name: 'Facebook Pixel', url: 'https://connect.facebook.net/en_US/fbevents.js' },
+							{ name: 'Doubleclick', url: 'https://ad.doubleclick.net/favicon.ico' },
+							{ name: 'Amazon Ads', url: 'https://z-na.amazon-adsystem.com/widgets/onejs' },
+							{ name: 'Twitter Pixel', url: 'https://static.ads-twitter.com/uwt.js' },
+							{ name: 'Hotjar', url: 'https://static.hotjar.com/c/hotjar-0.js' },
+							{ name: 'Criteo', url: 'https://static.criteo.net/js/ld/ld.js' },
+						];
+
+						for (const probe of adDomains) {
+							try {
+								const controller = new AbortController();
+								const timeout = setTimeout(() => controller.abort(), 3000);
+								await fetch(probe.url, { mode: 'no-cors', cache: 'no-store', signal: controller.signal });
+								clearTimeout(timeout);
+								adInfo += row(probe.name, 'reachable');
+								probes.push({ name: probe.name, blocked: false });
+							} catch (e) {
+								adInfo += row(probe.name, 'BLOCKED');
+								probes.push({ name: probe.name, blocked: true });
+							}
+						}
+
+						// DOM-based ad detection
+						try {
+							const adDiv = document.createElement('div');
+							adDiv.innerHTML = '&nbsp;';
+							adDiv.className = 'adsbox ad-banner ad-placement textads banner-ads';
+							adDiv.style.cssText = 'position:absolute;left:-9999px;width:1px;height:1px;';
+							document.body.appendChild(adDiv);
+							await new Promise(r => setTimeout(r, 100));
+							const adBlocked = adDiv.offsetHeight === 0 || adDiv.clientHeight === 0 ||
+								getComputedStyle(adDiv).display === 'none' || getComputedStyle(adDiv).visibility === 'hidden';
+							adInfo += row("CSS Ad Hiding", adBlocked ? 'DETECTED (adblocker)' : 'not detected');
+							document.body.removeChild(adDiv);
+						} catch (e) {}
+
+						// Check for common ad-blocker extensions
+						try {
+							const baitScript = document.createElement('script');
+							baitScript.src = 'data:text/javascript,void(0)';
+							baitScript.type = 'text/javascript';
+							baitScript.className = 'ad-script adsbygoogle';
+							document.head.appendChild(baitScript);
+							await new Promise(r => setTimeout(r, 50));
+							const scriptBlocked = !document.head.contains(baitScript);
+							adInfo += row("Script Injection Block", scriptBlocked ? 'DETECTED' : 'not detected');
+							if (document.head.contains(baitScript)) document.head.removeChild(baitScript);
+						} catch (e) {}
+
+						const blockedCount = probes.filter(p => p.blocked).length;
+						const totalCount = probes.length;
+						let level = 'none detected';
+						if (blockedCount >= 6) level = 'aggressive';
+						else if (blockedCount >= 3) level = 'moderate';
+						else if (blockedCount >= 1) level = 'minimal';
+						adInfo += row("Blocked Resources", blockedCount + "/" + totalCount);
+						adInfo += row("Blocking Level", level);
+
+						set('adblockDetect', adInfo);
+					};
+					adblockAsync().catch(() => hide('.adblockDetect'));
+				} catch (e) {
+					hide('.adblockDetect');
+				}
+
+				// --- Privacy Headers ---
+				try {
+					const headerAsync = async () => {
+						let hdrInfo = '';
+						try {
+							const res = await fetch(location.href, { method: 'HEAD', cache: 'no-store' });
+							const privacyHeaders = [
+								'content-security-policy',
+								'x-content-type-options',
+								'x-frame-options',
+								'strict-transport-security',
+								'referrer-policy',
+								'permissions-policy',
+								'cross-origin-opener-policy',
+								'cross-origin-embedder-policy',
+								'cross-origin-resource-policy',
+								'x-xss-protection',
+								'x-dns-prefetch-control',
+								'feature-policy',
+								'expect-ct',
+								'nel',
+								'report-to',
+							];
+							privacyHeaders.forEach(h => {
+								const val = res.headers.get(h);
+								hdrInfo += row(h, val || '(not set)');
+							});
+							// Server header leak
+							const server = res.headers.get('server');
+							hdrInfo += row("Server Header", server || '(not set)');
+							const powered = res.headers.get('x-powered-by');
+							hdrInfo += row("X-Powered-By", powered || '(not set)');
+						} catch (e) {
+							hdrInfo += row("Status", "could not fetch headers");
+						}
+						// Meta tag CSP
+						const cspMeta = document.querySelector('meta[http-equiv="Content-Security-Policy"]');
+						hdrInfo += row("Meta CSP", cspMeta ? cspMeta.content.substring(0, 80) : '(none)');
+						// Referrer meta
+						const refMeta = document.querySelector('meta[name="referrer"]');
+						hdrInfo += row("Meta Referrer", refMeta ? refMeta.content : '(none)');
+						set('privacyHeaders', hdrInfo);
+					};
+					headerAsync().catch(() => hide('.privacyHeaders'));
+				} catch (e) {
+					hide('.privacyHeaders');
+				}
+
+				// --- Browser Privacy Features ---
+				(async () => {
+					try {
+						let bpInfo = '';
+
+						// Brave detection
+						const isBrave = navigator.brave && typeof navigator.brave.isBrave === 'function';
+						if (isBrave) {
+							try {
+								const v = await navigator.brave.isBrave();
+								bpInfo += row("Brave Browser", v ? 'detected' : 'API present but not Brave');
+							} catch (e) {}
+						}
+						bpInfo += row("Brave API", isBrave ? 'present' : 'not found');
+
+						// Tor detection (reduced fingerprint surface)
+						const maybeTor = navigator.maxTouchPoints === 0 &&
+							screen.width === screen.availWidth &&
+							screen.height === screen.availHeight &&
+							window.devicePixelRatio === 1 &&
+							!navigator.plugins.length &&
+							Intl.DateTimeFormat().resolvedOptions().timeZone === 'UTC';
+						bpInfo += row("Tor-like Profile", maybeTor ? 'possible' : 'unlikely');
+
+						// Private/Incognito mode detection attempts
+						let incognitoLikely = false;
+						try {
+							if (navigator.storage && navigator.storage.estimate) {
+								const est = await navigator.storage.estimate();
+								if (est.quota < 120 * 1024 * 1024) incognitoLikely = true;
+							}
+						} catch (e) {}
+						try {
+							if (window.webkitRequestFileSystem) {
+								await new Promise((resolve, reject) => {
+									window.webkitRequestFileSystem(window.TEMPORARY, 100, resolve, () => {
+										incognitoLikely = true;
+										resolve();
+									});
+								});
+							}
+						} catch (e) { incognitoLikely = true; }
+						bpInfo += row("Private/Incognito", incognitoLikely ? 'likely' : 'unlikely');
+
+						// Canvas fingerprint protection
+						try {
+							const c1 = document.createElement('canvas');
+							const c2 = document.createElement('canvas');
+							c1.width = c2.width = 16; c1.height = c2.height = 16;
+							const ctx1 = c1.getContext('2d');
+							const ctx2 = c2.getContext('2d');
+							ctx1.fillStyle = '#f00'; ctx1.fillRect(0,0,16,16);
+							ctx1.fillStyle = '#0f0'; ctx1.font = '6px Arial'; ctx1.fillText('A',0,12);
+							ctx2.fillStyle = '#f00'; ctx2.fillRect(0,0,16,16);
+							ctx2.fillStyle = '#0f0'; ctx2.font = '6px Arial'; ctx2.fillText('A',0,12);
+							const match = c1.toDataURL() === c2.toDataURL();
+							bpInfo += row("Canvas Randomization", match ? 'not detected' : 'DETECTED (anti-fingerprint)');
+						} catch (e) {
+							bpInfo += row("Canvas Randomization", 'unable to test');
+						}
+
+						// AudioContext fingerprint protection
+						try {
+							const a1 = new OfflineAudioContext(1, 1, 44100);
+							const a2 = new OfflineAudioContext(1, 1, 44100);
+							const o1 = a1.createOscillator(); o1.connect(a1.destination); o1.start();
+							const o2 = a2.createOscillator(); o2.connect(a2.destination); o2.start();
+							const [r1, r2] = await Promise.all([a1.startRendering(), a2.startRendering()]);
+							const d1 = r1.getChannelData(0)[0];
+							const d2 = r2.getChannelData(0)[0];
+							bpInfo += row("Audio Randomization", d1 === d2 ? 'not detected' : 'DETECTED (anti-fingerprint)');
+						} catch (e) {}
+
+						// WebGL fingerprint protection
+						try {
+							const c = document.createElement('canvas');
+							const gl = c.getContext('webgl');
+							if (gl) {
+								const dbg = gl.getExtension('WEBGL_debug_renderer_info');
+								bpInfo += row("WebGL Debug Info", dbg ? 'exposed' : 'BLOCKED (anti-fingerprint)');
+							}
+						} catch (e) {}
+
+						// navigator.plugins consistency (Brave/Firefox return empty)
+						bpInfo += row("Plugins Exposed", navigator.plugins.length > 0 ? navigator.plugins.length + ' plugins' : 'hidden (0)');
+
+						// MimeTypes
+						bpInfo += row("MimeTypes Exposed", navigator.mimeTypes.length > 0 ? navigator.mimeTypes.length + ' types' : 'hidden (0)');
+
+						// navigator.connection hidden?
+						const conn2 = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+						bpInfo += row("Network Info API", conn2 ? 'exposed' : 'hidden');
+
+						// deviceMemory hidden?
+						bpInfo += row("Device Memory API", navigator.deviceMemory ? 'exposed (' + navigator.deviceMemory + ' GB)' : 'hidden');
+
+						// Battery API
+						bpInfo += row("Battery API", 'getBattery' in navigator ? 'exposed' : 'hidden');
+
+						// Keyboard API
+						bpInfo += row("Keyboard API", navigator.keyboard ? 'exposed' : 'hidden');
+
+						// Screen details beyond basics
+						bpInfo += row("Screen.isExtended", 'isExtended' in screen ? 'exposed' : 'hidden');
+
+						// Reduce fingerprint detection via consistent lies
+						const screenConsistent = screen.width === screen.availWidth && screen.height === screen.availHeight;
+						bpInfo += row("Screen Bounds Match", screenConsistent ? 'yes (possible spoofing)' : 'no (genuine)');
+
+						set('browserPrivacy', bpInfo);
+					} catch (e) {
+						hide('.browserPrivacy');
+					}
+				})();
+
+				// --- Supercookie Vectors ---
+				(async () => {
+					try {
+						let scInfo = '';
+
+						// HSTS supercookie — test if HSTS state persists
+						scInfo += row("HSTS", 'may persist across sessions if preloaded');
+
+						// ETag / Last-Modified caching
+						scInfo += row("HTTP Cache", 'available (potential tracking via ETags)');
+
+						// favicon cache
+						scInfo += row("Favicon Cache", 'available (potential tracking vector)');
+
+						// Alt-Svc header persistence
+						scInfo += row("Alt-Svc", 'if present, persists across requests');
+
+						// TLS session tickets
+						scInfo += row("TLS Session Tickets", 'may persist TLS state');
+
+						// Actual HSTS detection via redirect timing
+						try {
+							const hstsDomains = [
+								{ name: 'google.com', url: 'http://google.com/favicon.ico' },
+								{ name: 'facebook.com', url: 'http://facebook.com/favicon.ico' },
+							];
+							for (const d of hstsDomains) {
+								const t = performance.now();
+								try {
+									await fetch(d.url, { mode: 'no-cors', cache: 'no-store' });
+								} catch (e) {}
+								const elapsed = performance.now() - t;
+								scInfo += row("HSTS " + d.name, elapsed < 20 ? 'cached (instant redirect)' : elapsed.toFixed(0) + 'ms (network redirect)');
+							}
+						} catch (e) {}
+
+						// DNS prefetch control
+						const dnsPrefetch = document.querySelector('meta[http-equiv="x-dns-prefetch-control"]');
+						scInfo += row("DNS Prefetch Control", dnsPrefetch ? dnsPrefetch.content : '(not set)');
+
+						// Link prefetch
+						scInfo += row("Link Prefetch", 'HTMLLinkElement' in window ? 'available' : 'restricted');
+
+						// Speculative loading
+						scInfo += row("Speculation Rules", typeof HTMLScriptElement !== 'undefined' ? 'available' : 'restricted');
+
+						// WebSocket handshake (can leak cookies)
+						scInfo += row("WebSocket", typeof WebSocket !== 'undefined' ? 'available (cookie leak vector)' : 'blocked');
+
+						// CSS :visited history detection
+						try {
+							const a = document.createElement('a');
+							a.href = 'https://www.google.com';
+							a.textContent = 'test';
+							a.style.cssText = 'position:absolute;left:-9999px';
+							document.body.appendChild(a);
+							const style = getComputedStyle(a);
+							const color = style.color;
+							scInfo += row(":visited Color", color + ' (browsers limit :visited styling)');
+							document.body.removeChild(a);
+						} catch (e) {}
+
+						set('supercookies', scInfo);
+					} catch (e) {
+						hide('.supercookies');
+					}
+				})();
+
+				// --- Social / Login Leaks ---
+				try {
+					set('socialLeaks', row("Status", "probing..."));
+					const socialAsync = async () => {
+						let socialInfo = '';
+
+						// Detect logged-in status via image/resource loading
+						const socialProbes = [
+							{ name: 'Google (logged in)', url: 'https://accounts.google.com/CheckCookie?continue=https://www.google.com/favicon.ico', type: 'img' },
+							{ name: 'YouTube', url: 'https://www.youtube.com/img/desktop/yt_1200.png', type: 'fetch' },
+							{ name: 'Reddit', url: 'https://www.reddit.com/favicon.ico', type: 'fetch' },
+							{ name: 'GitHub', url: 'https://github.com/favicon.ico', type: 'fetch' },
+							{ name: 'Twitter/X', url: 'https://abs.twimg.com/favicons/twitter.3.ico', type: 'fetch' },
+						];
+
+						for (const probe of socialProbes) {
+							try {
+								const controller = new AbortController();
+								const timeout = setTimeout(() => controller.abort(), 3000);
+								const t = performance.now();
+								if (probe.type === 'img') {
+									await new Promise((resolve, reject) => {
+										const img = new Image();
+										img.onload = resolve;
+										img.onerror = reject;
+										img.src = probe.url + '&t=' + Date.now();
+										setTimeout(reject, 3000);
+									});
+									const elapsed = performance.now() - t;
+									socialInfo += row(probe.name, 'loaded (' + elapsed.toFixed(0) + 'ms)');
+								} else {
+									await fetch(probe.url, { mode: 'no-cors', cache: 'no-store', signal: controller.signal });
+									clearTimeout(timeout);
+									const elapsed = performance.now() - t;
+									socialInfo += row(probe.name, 'reachable (' + elapsed.toFixed(0) + 'ms)');
+								}
+							} catch (e) {
+								socialInfo += row(probe.name, 'blocked/unreachable');
+							}
+						}
+
+						// Credential Management API — check if credentials are stored
+						if (navigator.credentials && navigator.credentials.preventSilentAccess) {
+							socialInfo += row("Credential Mgmt", 'API available');
+						}
+
+						// Payment handler detection
+						if (window.PaymentRequest) {
+							socialInfo += row("Payment Request", 'available (reveals payment methods)');
+						} else {
+							socialInfo += row("Payment Request", 'not available');
+						}
+
+						// Web Share API (reveals installed share targets)
+						socialInfo += row("Web Share", navigator.share ? 'available' : 'not available');
+						socialInfo += row("Web Share Target", 'shareTarget' in navigator ? 'available' : 'not available');
+
+						// Protocol handler detection — reveals installed apps
+						socialInfo += row("Protocol Handlers", 'registerProtocolHandler' in navigator ? 'available' : 'not available');
+
+						set('socialLeaks', socialInfo);
+					};
+					socialAsync().catch(() => hide('.socialLeaks'));
+				} catch (e) {
+					hide('.socialLeaks');
+				}
+
+				// --- Uniqueness Estimate ---
+				try {
+					const uniqueAsync = async () => {
+						let uInfo = '';
+						let entropyBits = 0;
+
+						const addEntropy = (name, value, bits) => {
+							entropyBits += bits;
+							uInfo += row(name, value + ' (~' + bits + ' bits)');
+						};
+
+						// Screen resolution + DPR
+						const screenVal = screen.width + 'x' + screen.height + '@' + (window.devicePixelRatio || 1);
+						addEntropy('Screen', screenVal, 5.5);
+
+						// Timezone
+						addEntropy('Timezone', Intl.DateTimeFormat().resolvedOptions().timeZone, 4.5);
+
+						// Languages
+						const langs = (navigator.languages || [navigator.language]).join(',');
+						addEntropy('Languages', langs, 5);
+
+						// Platform
+						addEntropy('Platform', navigator.platform, 3);
+
+						// CPU cores
+						addEntropy('CPU Cores', navigator.hardwareConcurrency || '?', 3.5);
+
+						// Device memory
+						addEntropy('Device Memory', (navigator.deviceMemory || '?') + ' GB', 2);
+
+						// GPU renderer
+						try {
+							const c = document.createElement('canvas');
+							const gl = c.getContext('webgl');
+							if (gl) {
+								const dbg = gl.getExtension('WEBGL_debug_renderer_info');
+								if (dbg) {
+									const r = gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL);
+									addEntropy('GPU', r.substring(0, 40), 8);
+								} else {
+									addEntropy('GPU', '(blocked)', 0);
+								}
+							}
+						} catch (e) {}
+
+						// Fonts
+						addEntropy('Font Detection', 'via CSS width hack', 6);
+
+						// Canvas
+						addEntropy('Canvas FP', 'rendered text + shapes', 8);
+
+						// Audio
+						addEntropy('Audio FP', 'oscillator fingerprint', 6);
+
+						// Color depth
+						addEntropy('Color Depth', screen.colorDepth + '-bit', 1.5);
+
+						// Touch support
+						addEntropy('Touch Points', '' + navigator.maxTouchPoints, 2);
+
+						// User Agent
+						addEntropy('User Agent', 'parsed UA string', 10);
+
+						// Installed plugins
+						addEntropy('Plugins', navigator.plugins.length + ' found', 2);
+
+						// Preferences
+						const darkMode = mq('(prefers-color-scheme: dark)') ? 'dark' : 'light';
+						addEntropy('Color Scheme', darkMode, 1);
+
+						// Total
+						const totalEntropy = entropyBits;
+						uInfo += row("", "");
+						uInfo += row("Total Entropy", totalEntropy.toFixed(1) + ' bits');
+
+						// Calculate uniqueness
+						const population = Math.pow(2, totalEntropy);
+						const worldBrowserUsers = 5_000_000_000; // ~5B
+						const oneInN = Math.round(worldBrowserUsers / population);
+						if (oneInN < 1) {
+							uInfo += row("Estimated Uniqueness", '1 in ' + population.toLocaleString() + ' (likely unique)');
+						} else {
+							uInfo += row("Estimated Pool Size", '~' + oneInN.toLocaleString() + ' similar browsers worldwide');
+						}
+
+						if (totalEntropy >= 40) {
+							uInfo += row("Verdict", 'HIGHLY UNIQUE - easily trackable across sites');
+						} else if (totalEntropy >= 30) {
+							uInfo += row("Verdict", 'Somewhat unique - trackable with effort');
+						} else if (totalEntropy >= 20) {
+							uInfo += row("Verdict", 'Moderate anonymity set');
+						} else {
+							uInfo += row("Verdict", 'Good privacy - blends into crowd');
+						}
+
+						set('uniquenessEstimate', uInfo);
+					};
+					uniqueAsync().catch(() => hide('.uniquenessEstimate'));
+				} catch (e) {
+					hide('.uniquenessEstimate');
+				}
+
+				// --- Privacy Score ---
+				// This runs after a delay to collect results from other sections
+				setTimeout(() => {
+					try {
+						let scoreInfo = '';
+						let goodCount = 0;
+						let badCount = 0;
+						let totalChecks = 0;
+
+						const check = (name, isGood, detail) => {
+							totalChecks++;
+							if (isGood) goodCount++;
+							else badCount++;
+							scoreInfo += row((isGood ? '[PASS]' : '[FAIL]') + ' ' + name, detail);
+						};
+
+						// DNT
+						const dntVal = navigator.doNotTrack || window.doNotTrack;
+						check('Do Not Track', dntVal === '1', dntVal === '1' ? 'enabled' : 'not set');
+
+						// GPC
+						check('Global Privacy Control', navigator.globalPrivacyControl === true,
+							navigator.globalPrivacyControl ? 'enabled' : 'not enabled');
+
+						// Third-party cookies
+						// (inferred from cookie setting)
+						check('Cookies Restricted', !navigator.cookieEnabled, navigator.cookieEnabled ? 'cookies enabled' : 'cookies blocked');
+
+						// Canvas protection
+						try {
+							const c1 = document.createElement('canvas');
+							const c2 = document.createElement('canvas');
+							c1.width = c2.width = 16; c1.height = c2.height = 16;
+							const x1 = c1.getContext('2d'); const x2 = c2.getContext('2d');
+							x1.fillText('X',0,12); x2.fillText('X',0,12);
+							const canvasProtected = c1.toDataURL() !== c2.toDataURL();
+							check('Canvas Protection', canvasProtected, canvasProtected ? 'randomized' : 'not protected');
+						} catch (e) {
+							check('Canvas Protection', true, 'blocked');
+						}
+
+						// WebGL debug info
+						try {
+							const c = document.createElement('canvas');
+							const gl = c.getContext('webgl');
+							const dbg = gl ? gl.getExtension('WEBGL_debug_renderer_info') : null;
+							check('WebGL Info Hidden', !dbg, dbg ? 'GPU exposed' : 'GPU hidden');
+						} catch (e) {
+							check('WebGL Info Hidden', true, 'blocked');
+						}
+
+						// Device memory hidden
+						check('Device Memory Hidden', !navigator.deviceMemory, navigator.deviceMemory ? 'exposed' : 'hidden');
+
+						// Battery API hidden
+						check('Battery API Hidden', !('getBattery' in navigator), 'getBattery' in navigator ? 'exposed' : 'hidden');
+
+						// Network info hidden
+						const conn3 = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+						check('Network Info Hidden', !conn3, conn3 ? 'exposed' : 'hidden');
+
+						// Plugins hidden
+						check('Plugins Hidden', navigator.plugins.length === 0, navigator.plugins.length + ' exposed');
+
+						// Timer precision reduced
+						const tp1 = performance.now();
+						const tp2 = performance.now();
+						const timerStr = (tp2 - tp1).toString();
+						const timerDecimals = timerStr.includes('.') ? timerStr.split('.')[1].length : 0;
+						check('Timer Precision Reduced', timerDecimals <= 1, timerDecimals + ' decimal places');
+
+						// Secure context
+						check('Secure Context', window.isSecureContext, window.isSecureContext ? 'HTTPS' : 'HTTP');
+
+						// Webdriver false
+						check('Not Automated', !navigator.webdriver, navigator.webdriver ? 'webdriver detected' : 'not automated');
+
+						// User Agent Client Hints blocked
+						check('UA Client Hints Blocked', !navigator.userAgentData, navigator.userAgentData ? 'exposed' : 'blocked');
+
+						// Beacon API
+						check('Beacon API Blocked', !('sendBeacon' in navigator), 'sendBeacon' in navigator ? 'available' : 'blocked');
+
+						// Topics API
+						check('Topics API Blocked', !('browsingTopics' in document), 'browsingTopics' in document ? 'available' : 'blocked');
+
+						// Score calculation
+						const score = Math.round((goodCount / totalChecks) * 100);
+						let grade, verdict;
+						if (score >= 80) { grade = 'A'; verdict = 'Excellent privacy posture'; }
+						else if (score >= 60) { grade = 'B'; verdict = 'Good privacy with some gaps'; }
+						else if (score >= 40) { grade = 'C'; verdict = 'Moderate - significant tracking surface'; }
+						else if (score >= 20) { grade = 'D'; verdict = 'Poor - easily trackable'; }
+						else { grade = 'F'; verdict = 'Minimal privacy protection'; }
+
+						const header = row("Privacy Score", score + '/100 (Grade: ' + grade + ')') +
+							row("Checks Passed", goodCount + '/' + totalChecks) +
+							row("Verdict", verdict) +
+							row("", "---") ;
+
+						set('privacyScore', header + scoreInfo);
+					} catch (e) {
+						hide('.privacyScore');
+					}
+				}, 1000);
 			}
 		</script>
 	</body>
