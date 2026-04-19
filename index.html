@@ -300,6 +300,76 @@ canvas {
 			<div class="info" id="cssSupport"></div>
 		</div>
 
+		<div class="section networkDeep">
+			<p>Network (Deep)</p>
+			<div class="info" id="networkDeep"></div>
+		</div>
+
+		<div class="section webrtcLeak">
+			<p>WebRTC IP Leak</p>
+			<div class="info" id="webrtcLeak"></div>
+		</div>
+
+		<div class="section geoIP">
+			<p>GeoIP</p>
+			<div class="info" id="geoIP"></div>
+		</div>
+
+		<div class="section dnsLeak">
+			<p>DNS / Protocol</p>
+			<div class="info" id="dnsLeak"></div>
+		</div>
+
+		<div class="section cpuBench">
+			<p>CPU Benchmark</p>
+			<div class="info" id="cpuBench"></div>
+		</div>
+
+		<div class="section memoryProbe">
+			<p>Memory Probe</p>
+			<div class="info" id="memoryProbe"></div>
+		</div>
+
+		<div class="section diskProbe">
+			<p>Disk Probe</p>
+			<div class="info" id="diskProbe"></div>
+		</div>
+
+		<div class="section gpuBench">
+			<p>GPU Benchmark</p>
+			<div class="info" id="gpuBench"></div>
+		</div>
+
+		<div class="section gpuDeep">
+			<p>WebGPU Adapter</p>
+			<div class="info" id="gpuDeep"></div>
+		</div>
+
+		<div class="section clockDrift">
+			<p>Clock / Entropy</p>
+			<div class="info" id="clockDrift"></div>
+		</div>
+
+		<div class="section tlsFingerprint">
+			<p>TLS / Security</p>
+			<div class="info" id="tlsFingerprint"></div>
+		</div>
+
+		<div class="section gcTiming">
+			<p>GC / Runtime Timing</p>
+			<div class="info" id="gcTiming"></div>
+		</div>
+
+		<div class="section bandwidthEst">
+			<p>Bandwidth Estimate</p>
+			<div class="info" id="bandwidthEst"></div>
+		</div>
+
+		<div class="section workerProbe">
+			<p>Worker Thread Probe</p>
+			<div class="info" id="workerProbe"></div>
+		</div>
+
 		<div class="footer"><a href="https://theden.sh" target="_blank" rel="noopener">/TheDen.sh</a></div>
 
 		<script>
@@ -1087,6 +1157,645 @@ canvas {
 					set('cssSupport', cssInfo);
 				} catch (e) {
 					hide('.cssSupport');
+				}
+
+				// --- Network (Deep) ---
+				try {
+					let netInfo = '';
+					const endpoints = [
+						{ name: 'Cloudflare', url: 'https://1.1.1.1/cdn-cgi/trace' },
+						{ name: 'Google', url: 'https://www.google.com/generate_204' },
+					];
+					const fetchTimings = endpoints.map(ep => {
+						const t0 = performance.now();
+						return fetch(ep.url, { mode: 'no-cors', cache: 'no-store' })
+							.then(() => ({ name: ep.name, latency: (performance.now() - t0).toFixed(1), ok: true }))
+							.catch(() => ({ name: ep.name, latency: (performance.now() - t0).toFixed(1), ok: false }));
+					});
+					fetch('https://1.1.1.1/cdn-cgi/trace')
+						.then(r => r.text())
+						.then(text => {
+							const fields = {};
+							text.split('\n').forEach(line => {
+								const [k, v] = line.split('=');
+								if (k && v) fields[k.trim()] = v.trim();
+							});
+							netInfo += row("IP (Cloudflare)", fields.ip || 'N/A');
+							netInfo += row("Location", fields.loc || 'N/A');
+							netInfo += row("Colo (DC)", fields.colo || 'N/A');
+							netInfo += row("TLS Version", fields.tls || 'N/A');
+							netInfo += row("HTTP Protocol", fields.http || 'N/A');
+							netInfo += row("Warp", fields.warp || 'off');
+							netInfo += row("Gateway", fields.gateway || 'off');
+							Promise.allSettled(fetchTimings).then(results => {
+								results.forEach(r => {
+									if (r.value) netInfo += row(r.value.name + " Latency", r.value.latency + " ms" + (r.value.ok ? '' : ' (blocked)'));
+								});
+								set('networkDeep', netInfo);
+							});
+						})
+						.catch(() => {
+							Promise.allSettled(fetchTimings).then(results => {
+								results.forEach(r => {
+									if (r.value) netInfo += row(r.value.name + " Latency", r.value.latency + " ms" + (r.value.ok ? '' : ' (blocked)'));
+								});
+								if (netInfo) set('networkDeep', netInfo);
+								else hide('.networkDeep');
+							});
+						});
+				} catch (e) {
+					hide('.networkDeep');
+				}
+
+				// --- WebRTC IP Leak ---
+				try {
+					const ips = new Set();
+					const pc = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
+					pc.createDataChannel('');
+					pc.onicecandidate = (e) => {
+						if (!e.candidate) {
+							pc.close();
+							if (ips.size > 0) {
+								let rtcInfo = '';
+								let i = 0;
+								ips.forEach(ip => {
+									const isPrivate = /^(10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|fd|fe80|::1|127\.)/.test(ip);
+									rtcInfo += row(isPrivate ? "Private IP " + (++i) : "Public IP " + (++i), ip);
+								});
+								set('webrtcLeak', rtcInfo);
+							} else {
+								hide('.webrtcLeak');
+							}
+							return;
+						}
+						const candidate = e.candidate.candidate;
+						const ipRegex = /([0-9]{1,3}(\.[0-9]{1,3}){3}|[a-f0-9]{1,4}(:[a-f0-9]{1,4}){7})/;
+						const match = candidate.match(ipRegex);
+						if (match) ips.add(match[1]);
+					};
+					pc.createOffer().then(offer => pc.setLocalDescription(offer)).catch(() => hide('.webrtcLeak'));
+					setTimeout(() => { try { pc.close(); } catch(e) {} }, 5000);
+				} catch (e) {
+					hide('.webrtcLeak');
+				}
+
+				// --- GeoIP ---
+				try {
+					fetch('https://ipapi.co/json/')
+						.then(r => r.json())
+						.then(data => {
+							let geoInfo = '';
+							geoInfo += row("IP", data.ip || 'N/A');
+							geoInfo += row("City", data.city || 'N/A');
+							geoInfo += row("Region", data.region || 'N/A');
+							geoInfo += row("Country", (data.country_name || 'N/A') + ' (' + (data.country_code || '') + ')');
+							geoInfo += row("Postal", data.postal || 'N/A');
+							geoInfo += row("Latitude", data.latitude || 'N/A');
+							geoInfo += row("Longitude", data.longitude || 'N/A');
+							geoInfo += row("ISP", data.org || 'N/A');
+							geoInfo += row("ASN", data.asn || 'N/A');
+							const browserTZ = Intl.DateTimeFormat().resolvedOptions().timeZone;
+							const ipTZ = data.timezone;
+							if (browserTZ && ipTZ) {
+								geoInfo += row("IP Timezone", ipTZ);
+								geoInfo += row("Browser Timezone", browserTZ);
+								geoInfo += row("TZ Mismatch (VPN?)", browserTZ === ipTZ ? 'no' : 'YES - possible VPN/proxy');
+							}
+							set('geoIP', geoInfo);
+						})
+						.catch(() => hide('.geoIP'));
+				} catch (e) {
+					hide('.geoIP');
+				}
+
+				// --- DNS / Protocol ---
+				try {
+					let dnsInfo = '';
+					const randomHost = 'dnsprobe-' + Math.random().toString(36).slice(2, 10) + '.example.com';
+					const dnsStart = performance.now();
+					fetch('https://' + randomHost, { mode: 'no-cors', cache: 'no-store' })
+						.catch(() => {})
+						.finally(() => {
+							const dnsTime = (performance.now() - dnsStart).toFixed(1);
+							dnsInfo += row("DNS Resolve (random)", dnsTime + " ms");
+							const dns2Start = performance.now();
+							fetch('https://' + randomHost, { mode: 'no-cors', cache: 'no-store' })
+								.catch(() => {})
+								.finally(() => {
+									const dns2Time = (performance.now() - dns2Start).toFixed(1);
+									dnsInfo += row("DNS Resolve (cached)", dns2Time + " ms");
+									dnsInfo += row("DNS Cache Delta", (dnsTime - dns2Time).toFixed(1) + " ms");
+									const navEntries = performance.getEntriesByType('navigation');
+									if (navEntries[0]) dnsInfo += row("Page Protocol", navEntries[0].nextHopProtocol || 'N/A');
+									const resEntries = performance.getEntriesByType('resource');
+									const protocols = [...new Set(resEntries.map(e => e.nextHopProtocol).filter(Boolean))];
+									if (protocols.length > 0) dnsInfo += row("Resource Protocols", protocols.join(', '));
+									set('dnsLeak', dnsInfo);
+								});
+						});
+				} catch (e) {
+					hide('.dnsLeak');
+				}
+
+				// --- CPU Benchmark ---
+				try {
+					set('cpuBench', row("Status", "running benchmarks..."));
+					const iterations = 50000;
+					const benchData = new Uint8Array(64);
+					crypto.getRandomValues(benchData);
+					const sha256Start = performance.now();
+					let hashPromise = crypto.subtle.digest('SHA-256', benchData);
+					for (let i = 1; i < iterations; i++) {
+						hashPromise = hashPromise.then(buf => crypto.subtle.digest('SHA-256', new Uint8Array(buf)));
+					}
+					const mathBenchStart = performance.now();
+					let acc = 0;
+					for (let i = 0; i < 5000000; i++) {
+						acc += Math.sin(i) * Math.cos(i) * Math.tan(i % 1000);
+					}
+					const mathTime = performance.now() - mathBenchStart;
+					const fibStart = performance.now();
+					function fib(n) { return n <= 1 ? n : fib(n - 1) + fib(n - 2); }
+					const fibResult = fib(38);
+					const fibTime = performance.now() - fibStart;
+					const sieveStart = performance.now();
+					const sieveSize = 1000000;
+					const sieveBuf = new Uint8Array(sieveSize);
+					for (let i = 2; i * i < sieveSize; i++) {
+						if (!sieveBuf[i]) for (let j = i * i; j < sieveSize; j += i) sieveBuf[j] = 1;
+					}
+					let primeCount = 0;
+					for (let i = 2; i < sieveSize; i++) if (!sieveBuf[i]) primeCount++;
+					const sieveTime = performance.now() - sieveStart;
+					const bufSize = 64 * 1024 * 1024;
+					const fillBuf = new Float64Array(bufSize / 8);
+					const fillStart = performance.now();
+					for (let i = 0; i < fillBuf.length; i++) fillBuf[i] = i * 1.001;
+					const fillTime = performance.now() - fillStart;
+					const fillBandwidth = (bufSize / (1024 * 1024)) / (fillTime / 1000);
+					let simdSupported = false;
+					try {
+						simdSupported = WebAssembly.validate(new Uint8Array([
+							0,97,115,109,1,0,0,0,1,5,1,96,0,1,123,3,2,1,0,10,10,1,8,0,65,0,253,15,253,98,11
+						]));
+					} catch (e) {}
+					hashPromise.then(() => {
+						const shaTime = performance.now() - sha256Start;
+						let cpuInfo = '';
+						cpuInfo += row("Math Ops (5M iter)", mathTime.toFixed(1) + " ms");
+						cpuInfo += row("Fibonacci(38)", fibTime.toFixed(1) + " ms (" + fibResult + ")");
+						cpuInfo += row("Prime Sieve (1M)", sieveTime.toFixed(1) + " ms (" + primeCount + " primes)");
+						cpuInfo += row("SHA-256 Chain (50K)", shaTime.toFixed(1) + " ms");
+						cpuInfo += row("Mem Fill 64MB", fillTime.toFixed(1) + " ms");
+						cpuInfo += row("Mem Bandwidth", fillBandwidth.toFixed(0) + " MB/s");
+						cpuInfo += row("WASM SIMD", simdSupported ? 'supported' : 'no');
+						const score = Math.round(1000000 / (mathTime + fibTime + sieveTime));
+						cpuInfo += row("Single-Core Score", score + " (higher = faster)");
+						set('cpuBench', cpuInfo);
+					}).catch(() => {
+						let cpuInfo = '';
+						cpuInfo += row("Math Ops (5M iter)", mathTime.toFixed(1) + " ms");
+						cpuInfo += row("Fibonacci(38)", fibTime.toFixed(1) + " ms");
+						cpuInfo += row("Prime Sieve (1M)", sieveTime.toFixed(1) + " ms");
+						cpuInfo += row("Mem Fill 64MB", fillTime.toFixed(1) + " ms");
+						cpuInfo += row("Mem Bandwidth", fillBandwidth.toFixed(0) + " MB/s");
+						cpuInfo += row("WASM SIMD", simdSupported ? 'supported' : 'no');
+						set('cpuBench', cpuInfo);
+					});
+				} catch (e) {
+					hide('.cpuBench');
+				}
+
+				// --- Memory Probe ---
+				try {
+					let memInfo = '';
+					let maxAlloc = 0;
+					const allocations = [];
+					const chunkSizes = [2048, 1024, 512, 256, 128, 64, 32, 16, 8, 4, 2, 1];
+					let totalAllocated = 0;
+					for (const sizeMB of chunkSizes) {
+						try {
+							const buf = new ArrayBuffer(sizeMB * 1024 * 1024);
+							if (buf.byteLength > 0) {
+								allocations.push(buf);
+								totalAllocated += sizeMB;
+								if (sizeMB > maxAlloc) maxAlloc = sizeMB;
+							}
+						} catch (e) { break; }
+					}
+					memInfo += row("Max Single Alloc", maxAlloc + " MB");
+					memInfo += row("Total Allocated", totalAllocated + " MB");
+					allocations.length = 0;
+					const testBuf = new Float64Array(1024 * 1024);
+					const seqStart = performance.now();
+					for (let i = 0; i < testBuf.length; i++) testBuf[i] = i;
+					const seqTime = performance.now() - seqStart;
+					const randStart = performance.now();
+					for (let i = 0; i < testBuf.length; i++) {
+						const idx = (i * 2654435761) % testBuf.length;
+						testBuf[idx] = i;
+					}
+					const randTime = performance.now() - randStart;
+					memInfo += row("Sequential Write 8MB", seqTime.toFixed(1) + " ms");
+					memInfo += row("Random Write 8MB", randTime.toFixed(1) + " ms");
+					memInfo += row("Seq/Rand Ratio", (randTime / seqTime).toFixed(2) + "x (cache effects)");
+					memInfo += row("ArrayBuffer.transfer", typeof ArrayBuffer.prototype.transfer === 'function' ? 'supported' : 'no');
+					memInfo += row("Resizable ArrayBuffer", typeof ArrayBuffer.prototype.resize === 'function' ? 'supported' : 'no');
+					if (navigator.deviceMemory) {
+						memInfo += row("Device Memory Hint", navigator.deviceMemory + " GB (min)");
+						const dm = navigator.deviceMemory;
+						if (dm >= 8) memInfo += row("Estimated RAM", "8-64 GB");
+						else if (dm >= 4) memInfo += row("Estimated RAM", "4-8 GB");
+						else if (dm >= 2) memInfo += row("Estimated RAM", "2-4 GB");
+						else memInfo += row("Estimated RAM", "< 2 GB");
+					}
+					set('memoryProbe', memInfo);
+				} catch (e) {
+					hide('.memoryProbe');
+				}
+
+				// --- Disk Probe ---
+				try {
+					let diskInfo = '';
+					const diskProbeAsync = async () => {
+						if (navigator.storage && navigator.storage.estimate) {
+							const est = await navigator.storage.estimate();
+							const quotaGB = (est.quota / (1024 ** 3)).toFixed(2);
+							const usedGB = (est.usage / (1024 ** 3)).toFixed(4);
+							const usedPct = ((est.usage / est.quota) * 100).toFixed(4);
+							diskInfo += row("Storage Quota", quotaGB + " GB");
+							diskInfo += row("Storage Used", usedGB + " GB (" + usedPct + "%)");
+							const estimatedDisk = (est.quota / 0.6 / (1024 ** 3)).toFixed(0);
+							diskInfo += row("Est. Free Disk", "~" + estimatedDisk + " GB (from quota/0.6)");
+						}
+						if (navigator.storage && navigator.storage.persisted) {
+							const persisted = await navigator.storage.persisted();
+							diskInfo += row("Persistent Storage", persisted ? 'granted' : 'not granted');
+						}
+						try {
+							const dbName = '_sysinfo_bench_' + Date.now();
+							const openReq = indexedDB.open(dbName, 1);
+							await new Promise((resolve, reject) => {
+								openReq.onupgradeneeded = () => {
+									openReq.result.createObjectStore('bench', { keyPath: 'id' });
+								};
+								openReq.onsuccess = async () => {
+									const db = openReq.result;
+									const writeStart = performance.now();
+									const tx = db.transaction('bench', 'readwrite');
+									const store = tx.objectStore('bench');
+									for (let i = 0; i < 1000; i++) {
+										store.put({ id: i, data: 'x'.repeat(1024) });
+									}
+									await new Promise(r => { tx.oncomplete = r; tx.onerror = r; });
+									const writeTime = performance.now() - writeStart;
+									diskInfo += row("IDB Write 1000x1KB", writeTime.toFixed(1) + " ms");
+									diskInfo += row("IDB Write Speed", ((1000 / writeTime) * 1000).toFixed(0) + " ops/s");
+									const readStart = performance.now();
+									const tx2 = db.transaction('bench', 'readonly');
+									const store2 = tx2.objectStore('bench');
+									for (let i = 0; i < 1000; i++) store2.get(i);
+									await new Promise(r => { tx2.oncomplete = r; tx2.onerror = r; });
+									const readTime = performance.now() - readStart;
+									diskInfo += row("IDB Read 1000x1KB", readTime.toFixed(1) + " ms");
+									diskInfo += row("IDB Read Speed", ((1000 / readTime) * 1000).toFixed(0) + " ops/s");
+									db.close();
+									indexedDB.deleteDatabase(dbName);
+									resolve();
+								};
+								openReq.onerror = reject;
+							});
+						} catch (e) {}
+						try {
+							if ('caches' in window) {
+								const cacheName = '_sysinfo_bench_' + Date.now();
+								const cache = await caches.open(cacheName);
+								const cacheStart = performance.now();
+								const blob = new Blob(['x'.repeat(1024 * 100)]);
+								for (let i = 0; i < 50; i++) {
+									await cache.put(new Request('/_bench/' + i), new Response(blob));
+								}
+								const cacheTime = performance.now() - cacheStart;
+								diskInfo += row("Cache Write 50x100KB", cacheTime.toFixed(1) + " ms");
+								diskInfo += row("Cache Throughput", ((50 * 100 / 1024) / (cacheTime / 1000)).toFixed(1) + " MB/s");
+								await caches.delete(cacheName);
+							}
+						} catch (e) {}
+						set('diskProbe', diskInfo || row("Status", "no data available"));
+					};
+					diskProbeAsync().catch(() => hide('.diskProbe'));
+				} catch (e) {
+					hide('.diskProbe');
+				}
+
+				// --- GPU Benchmark ---
+				try {
+					const gpuCanvas = document.createElement('canvas');
+					gpuCanvas.width = 2048;
+					gpuCanvas.height = 2048;
+					const glBench = gpuCanvas.getContext('webgl2') || gpuCanvas.getContext('webgl');
+					if (glBench) {
+						let gpuBenchInfo = '';
+						const texData = new Uint8Array(1024 * 1024 * 4);
+						crypto.getRandomValues(texData);
+						const tex = glBench.createTexture();
+						glBench.bindTexture(glBench.TEXTURE_2D, tex);
+						const texStart = performance.now();
+						for (let i = 0; i < 20; i++) {
+							glBench.texImage2D(glBench.TEXTURE_2D, 0, glBench.RGBA, 1024, 1024, 0, glBench.RGBA, glBench.UNSIGNED_BYTE, texData);
+						}
+						glBench.finish();
+						const texTime = performance.now() - texStart;
+						gpuBenchInfo += row("Tex Upload 20x1024x1024", texTime.toFixed(1) + " ms");
+						gpuBenchInfo += row("Tex Upload Throughput", ((20 * 4) / (texTime / 1000)).toFixed(0) + " MB/s");
+						const drawStart = performance.now();
+						for (let i = 0; i < 10000; i++) {
+							glBench.drawArrays(glBench.TRIANGLES, 0, 0);
+						}
+						glBench.finish();
+						const drawTime = performance.now() - drawStart;
+						gpuBenchInfo += row("10K Draw Calls", drawTime.toFixed(1) + " ms");
+						const readBuf = new Uint8Array(2048 * 2048 * 4);
+						const readStart = performance.now();
+						glBench.readPixels(0, 0, 2048, 2048, glBench.RGBA, glBench.UNSIGNED_BYTE, readBuf);
+						const readTime = performance.now() - readStart;
+						gpuBenchInfo += row("Readback 2048x2048", readTime.toFixed(1) + " ms");
+						gpuBenchInfo += row("Readback Bandwidth", ((2048 * 2048 * 4 / (1024 * 1024)) / (readTime / 1000)).toFixed(0) + " MB/s");
+						const maxRB = glBench.getParameter(glBench.MAX_RENDERBUFFER_SIZE);
+						const maxTexSize = glBench.getParameter(glBench.MAX_TEXTURE_SIZE);
+						gpuBenchInfo += row("Max Tex Pixels", (maxTexSize * maxTexSize / 1000000).toFixed(0) + " MP");
+						gpuBenchInfo += row("Est. VRAM (heuristic)", maxRB >= 16384 ? ">= 4 GB" : maxRB >= 8192 ? ">= 2 GB" : ">= 1 GB");
+						glBench.deleteTexture(tex);
+						set('gpuBench', gpuBenchInfo);
+					} else {
+						hide('.gpuBench');
+					}
+				} catch (e) {
+					hide('.gpuBench');
+				}
+
+				// --- WebGPU Adapter ---
+				try {
+					if (navigator.gpu) {
+						navigator.gpu.requestAdapter().then(adapter => {
+							if (!adapter) { hide('.gpuDeep'); return; }
+							let gpuDeepInfo = '';
+							if (adapter.info) {
+								gpuDeepInfo += row("Vendor", adapter.info.vendor || 'N/A');
+								gpuDeepInfo += row("Architecture", adapter.info.architecture || 'N/A');
+								gpuDeepInfo += row("Device", adapter.info.device || 'N/A');
+								gpuDeepInfo += row("Description", adapter.info.description || 'N/A');
+							}
+							gpuDeepInfo += row("Is Fallback", adapter.isFallbackAdapter ? 'yes' : 'no');
+							const features = [];
+							adapter.features.forEach(f => features.push(f));
+							gpuDeepInfo += row("Features (" + features.length + ")", features.join(', ') || 'none');
+							const importantLimits = [
+								'maxTextureDimension2D', 'maxBufferSize', 'maxStorageBufferBindingSize',
+								'maxComputeWorkgroupSizeX', 'maxComputeWorkgroupSizeY', 'maxComputeWorkgroupSizeZ',
+								'maxComputeInvocationsPerWorkgroup', 'maxComputeWorkgroupsPerDimension',
+								'maxColorAttachments', 'maxSampledTexturesPerShaderStage',
+							];
+							importantLimits.forEach(limit => {
+								if (adapter.limits[limit] != null) {
+									let val = adapter.limits[limit];
+									if (val > 1024 * 1024) val = (val / (1024 * 1024)).toFixed(0) + ' MB';
+									gpuDeepInfo += row(limit, val);
+								}
+							});
+							set('gpuDeep', gpuDeepInfo);
+						}).catch(() => hide('.gpuDeep'));
+					} else {
+						hide('.gpuDeep');
+					}
+				} catch (e) {
+					hide('.gpuDeep');
+				}
+
+				// --- Clock / Entropy ---
+				try {
+					let clockInfo = '';
+					const now = new Date();
+					clockInfo += row("System Time", now.toISOString());
+					clockInfo += row("Unix Epoch", now.getTime());
+					clockInfo += row("TZ Offset", now.getTimezoneOffset() + " min");
+					const jan = new Date(now.getFullYear(), 0, 1).getTimezoneOffset();
+					const jul = new Date(now.getFullYear(), 6, 1).getTimezoneOffset();
+					const hasDST = jan !== jul;
+					clockInfo += row("DST Observed", hasDST ? 'yes' : 'no');
+					clockInfo += row("Currently DST", hasDST && now.getTimezoneOffset() !== Math.max(jan, jul) ? 'yes' : 'no');
+					const perfNow1 = performance.now();
+					const dateNow1 = Date.now();
+					const clockTarget = performance.now() + 10;
+					while (performance.now() < clockTarget);
+					const perfNow2 = performance.now();
+					const dateNow2 = Date.now();
+					const perfDelta = perfNow2 - perfNow1;
+					const dateDelta = dateNow2 - dateNow1;
+					const drift = Math.abs(perfDelta - dateDelta);
+					clockInfo += row("Clock Drift (10ms)", drift.toFixed(3) + " ms (perf vs Date)");
+					const entropy = new Uint32Array(4);
+					crypto.getRandomValues(entropy);
+					clockInfo += row("CSPRNG Sample", Array.from(entropy).map(v => v.toString(16).padStart(8, '0')).join(''));
+					const entropyBuf = new Uint8Array(1024);
+					crypto.getRandomValues(entropyBuf);
+					const counts = new Array(256).fill(0);
+					entropyBuf.forEach(b => counts[b]++);
+					const expected = 1024 / 256;
+					let chi2 = 0;
+					counts.forEach(c => chi2 += Math.pow(c - expected, 2) / expected);
+					clockInfo += row("Chi-sq (1024 bytes)", chi2.toFixed(2) + " (expect ~255)");
+					set('clockDrift', clockInfo);
+				} catch (e) {
+					hide('.clockDrift');
+				}
+
+				// --- TLS / Security ---
+				try {
+					let tlsInfo = '';
+					tlsInfo += row("HTTPS", location.protocol === 'https:' ? 'yes' : 'no');
+					tlsInfo += row("Secure Context", window.isSecureContext ? 'yes' : 'no');
+					tlsInfo += row("Cross-Origin Isolated", window.crossOriginIsolated ? 'yes' : 'no');
+					const fpFeatures = [
+						'accelerometer', 'autoplay', 'camera', 'display-capture',
+						'encrypted-media', 'fullscreen', 'geolocation', 'gyroscope',
+						'magnetometer', 'microphone', 'midi', 'payment',
+						'picture-in-picture', 'publickey-credentials-get',
+						'screen-wake-lock', 'usb', 'xr-spatial-tracking',
+					];
+					if (document.featurePolicy && document.featurePolicy.allowsFeature) {
+						fpFeatures.forEach(f => {
+							try { tlsInfo += row("FP: " + f, document.featurePolicy.allowsFeature(f) ? 'allowed' : 'denied'); } catch (e) {}
+						});
+					} else if (document.permissionsPolicy && document.permissionsPolicy.allowsFeature) {
+						fpFeatures.forEach(f => {
+							try { tlsInfo += row("PP: " + f, document.permissionsPolicy.allowsFeature(f) ? 'allowed' : 'denied'); } catch (e) {}
+						});
+					}
+					tlsInfo += row("Credential API", 'credentials' in navigator ? 'available' : 'no');
+					tlsInfo += row("WebAuthn", typeof PublicKeyCredential !== 'undefined' ? 'available' : 'no');
+					if (typeof PublicKeyCredential !== 'undefined' && PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable) {
+						PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable().then(avail => {
+							const current = document.getElementById('tlsFingerprint').innerHTML;
+							set('tlsFingerprint', current + row("Platform Authenticator", avail ? 'available' : 'no'));
+						}).catch(() => {});
+					}
+					tlsInfo += row("SubtleCrypto", crypto.subtle ? 'available' : 'no');
+					set('tlsFingerprint', tlsInfo);
+				} catch (e) {
+					hide('.tlsFingerprint');
+				}
+
+				// --- GC / Runtime Timing ---
+				try {
+					let gcInfo = '';
+					const gcSamples = 500;
+					const gcTimings = [];
+					let gcPrev = performance.now();
+					for (let i = 0; i < gcSamples; i++) {
+						const garbage = new Array(10000).fill({ x: Math.random(), y: 'garbage'.repeat(10) });
+						const gcNow = performance.now();
+						gcTimings.push(gcNow - gcPrev);
+						gcPrev = gcNow;
+					}
+					gcTimings.sort((a, b) => a - b);
+					const gcMedian = gcTimings[Math.floor(gcSamples / 2)];
+					const gcP95 = gcTimings[Math.floor(gcSamples * 0.95)];
+					const gcP99 = gcTimings[Math.floor(gcSamples * 0.99)];
+					const gcMax = gcTimings[gcSamples - 1];
+					const gcJitter = gcTimings.reduce((sum, t) => sum + Math.abs(t - gcMedian), 0) / gcSamples;
+					const gcPauses = gcTimings.filter(t => t > gcMedian * 3).length;
+					gcInfo += row("Loop Median", gcMedian.toFixed(3) + " ms");
+					gcInfo += row("Loop P95", gcP95.toFixed(3) + " ms");
+					gcInfo += row("Loop P99", gcP99.toFixed(3) + " ms");
+					gcInfo += row("Loop Max", gcMax.toFixed(3) + " ms");
+					gcInfo += row("Avg Jitter", gcJitter.toFixed(3) + " ms");
+					gcInfo += row("Likely GC Pauses", gcPauses + " / " + gcSamples + " iterations");
+					gcInfo += row("GC Pressure", gcPauses > 20 ? 'high' : gcPauses > 5 ? 'moderate' : 'low');
+					if (performance.measureUserAgentSpecificMemory) {
+						performance.measureUserAgentSpecificMemory().then(result => {
+							const current = document.getElementById('gcTiming').innerHTML;
+							set('gcTiming', current +
+								row("Total JS Memory", (result.bytes / (1024 * 1024)).toFixed(2) + " MB") +
+								row("Breakdown Entries", result.breakdown.length)
+							);
+						}).catch(() => {});
+					}
+					set('gcTiming', gcInfo);
+				} catch (e) {
+					hide('.gcTiming');
+				}
+
+				// --- Bandwidth Estimate ---
+				try {
+					set('bandwidthEst', row("Status", "measuring..."));
+					const runBWTest = async () => {
+						let bwInfo = '';
+						const nc = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+						if (nc) {
+							if (nc.effectiveType) bwInfo += row("Effective Type", nc.effectiveType);
+							if (nc.downlink != null) bwInfo += row("Est. Downlink", nc.downlink + " Mbps");
+							if (nc.rtt != null) bwInfo += row("Est. RTT", nc.rtt + " ms");
+							if (nc.type) bwInfo += row("Connection Type", nc.type);
+							if (nc.downlinkMax) bwInfo += row("Max Downlink", nc.downlinkMax + " Mbps");
+						}
+						// Fetch small resource
+						try {
+							const t0 = performance.now();
+							await fetch('https://www.google.com/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png', { cache: 'no-store', mode: 'no-cors' });
+							bwInfo += row("Fetch Small Image", (performance.now() - t0).toFixed(1) + " ms");
+						} catch (e) {}
+						// Latency measurement
+						const latencies = [];
+						for (let i = 0; i < 5; i++) {
+							const t = performance.now();
+							try {
+								await fetch('https://1.1.1.1/cdn-cgi/trace', { cache: 'no-store' });
+								latencies.push(performance.now() - t);
+							} catch (e) {
+								try {
+									await fetch(location.href, { cache: 'no-store', method: 'HEAD' });
+									latencies.push(performance.now() - t);
+								} catch (e2) {}
+							}
+						}
+						if (latencies.length > 0) {
+							latencies.sort((a, b) => a - b);
+							bwInfo += row("Latency Min", latencies[0].toFixed(1) + " ms");
+							bwInfo += row("Latency Median", latencies[Math.floor(latencies.length / 2)].toFixed(1) + " ms");
+							bwInfo += row("Latency Max", latencies[latencies.length - 1].toFixed(1) + " ms");
+							const bwJitter = latencies.reduce((s, l, i) => i > 0 ? s + Math.abs(l - latencies[i-1]) : s, 0) / (latencies.length - 1);
+							bwInfo += row("Jitter", bwJitter.toFixed(1) + " ms");
+						}
+						set('bandwidthEst', bwInfo || row("Status", "no data"));
+					};
+					runBWTest().catch(() => hide('.bandwidthEst'));
+				} catch (e) {
+					hide('.bandwidthEst');
+				}
+
+				// --- Worker Thread Probe ---
+				try {
+					if (typeof Worker !== 'undefined') {
+						set('workerProbe', row("Status", "spawning workers..."));
+						const cores = navigator.hardwareConcurrency || 4;
+						const workerCode = `
+							self.onmessage = function(e) {
+								const start = performance.now();
+								let acc = 0;
+								for (let i = 0; i < e.data.iterations; i++) {
+									acc += Math.sin(i) * Math.cos(i);
+								}
+								self.postMessage({ time: performance.now() - start, acc: acc, id: e.data.id });
+							};
+						`;
+						const blob = new Blob([workerCode], { type: 'application/javascript' });
+						const workerUrl = URL.createObjectURL(blob);
+						const workerIterations = 2000000;
+						const seqWorker = new Worker(workerUrl);
+						seqWorker.postMessage({ iterations: workerIterations, id: 0 });
+						seqWorker.onmessage = (e) => {
+							const seqWorkerTime = e.data.time;
+							seqWorker.terminate();
+							const workers = [];
+							const parResults = [];
+							const parStart = performance.now();
+							for (let i = 0; i < cores; i++) {
+								const w = new Worker(workerUrl);
+								workers.push(w);
+								w.onmessage = (ev) => {
+									parResults.push(ev.data);
+									if (parResults.length === cores) {
+										const wallTime = performance.now() - parStart;
+										const avgWorkerTime = parResults.reduce((s, r) => s + r.time, 0) / parResults.length;
+										const maxWorkerTime = Math.max(...parResults.map(r => r.time));
+										let wInfo = '';
+										wInfo += row("Workers Spawned", cores);
+										wInfo += row("Iterations/Worker", workerIterations.toLocaleString());
+										wInfo += row("1 Worker Time", seqWorkerTime.toFixed(1) + " ms");
+										wInfo += row(cores + " Workers Wall Time", wallTime.toFixed(1) + " ms");
+										wInfo += row("Avg Worker Time", avgWorkerTime.toFixed(1) + " ms");
+										wInfo += row("Max Worker Time", maxWorkerTime.toFixed(1) + " ms");
+										const speedup = seqWorkerTime / (wallTime / cores);
+										const efficiency = (seqWorkerTime / wallTime * 100).toFixed(0);
+										wInfo += row("Parallelism Speedup", speedup.toFixed(2) + "x");
+										wInfo += row("Parallel Efficiency", efficiency + "%");
+										const realCores = Math.round(seqWorkerTime * cores / wallTime);
+										wInfo += row("Effective Cores", realCores + " (of " + cores + " reported)");
+										wInfo += row("HyperThreading?", realCores < cores ? 'likely (' + (cores - realCores) + ' virtual)' : 'no (or all physical)');
+										workers.forEach(w => w.terminate());
+										URL.revokeObjectURL(workerUrl);
+										set('workerProbe', wInfo);
+									}
+								};
+								w.postMessage({ iterations: workerIterations, id: i });
+							}
+						};
+					} else {
+						hide('.workerProbe');
+					}
+				} catch (e) {
+					hide('.workerProbe');
 				}
 			}
 		</script>
