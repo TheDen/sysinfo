@@ -133,6 +133,53 @@ a:active  { color: #009966; background: black; }
 canvas {
   display: none;
 }
+
+#runBtn {
+  display: block;
+  margin: 1em auto;
+  padding: 0.6em 2.5em;
+  font-family: monospace;
+  font-size: 1.1em;
+  font-weight: bold;
+  color: black;
+  background: #009966;
+  border: 2px solid #33cc99;
+  border-radius: 4px;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+}
+#runBtn:hover { background: #33cc99; }
+#runBtn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+#progressWrap {
+  display: none;
+  margin: 1em 0 0.5em;
+}
+#progressBar {
+  width: 100%;
+  height: 6px;
+  background: #112a1f;
+  border-radius: 3px;
+  overflow: hidden;
+}
+#progressFill {
+  height: 100%;
+  width: 0%;
+  background: #009966;
+  transition: width 0.3s;
+}
+#progressText {
+  font-size: 0.75em;
+  color: #66b399;
+  margin-top: 0.3em;
+  text-align: center;
+}
+
+#resultsWrap { display: none; }
 		</style>
 	</head>
 	<body>
@@ -168,8 +215,15 @@ canvas {
 			<p class="warning">Heads up: some tests may trigger browser prompts, pop-up warnings, or brief CPU/GPU spikes as benchmarks run. WebRTC, STUN, and network probes will make outbound connections. No data is collected or sent to any server beyond what is listed (Cloudflare trace, ipapi.co for GeoIP). All processing happens locally in your browser.</p>
 		</div>
 
+		<button id="runBtn" onclick="runScan()">Run Scan</button>
+		<div id="progressWrap">
+			<div id="progressBar"><div id="progressFill"></div></div>
+			<div id="progressText">Starting...</div>
+		</div>
+
 		<canvas id="canvas" width="0" height="0"></canvas>
 
+		<div id="resultsWrap">
 		<!-- ==================== SYSTEM & HARDWARE ==================== -->
 		<div class="section-group">System &amp; Hardware</div>
 
@@ -473,22 +527,129 @@ canvas {
 			<div class="info" id="plugins"></div>
 		</div>
 
+		<div class="section clipboardProbe">
+			<p>Clipboard</p>
+			<div class="info" id="clipboardProbe"></div>
+		</div>
+
+		<div class="section extensionDetect">
+			<p>Extension Detection</p>
+			<div class="info" id="extensionDetect"></div>
+		</div>
+
+		</div><!-- /resultsWrap -->
+
 		<div class="footer"><a href="https://theden.sh" target="_blank" rel="noopener">/TheDen.sh</a></div>
 
 		<script>
-			{
-				function hide(selector) {
-					const el = document.querySelector(selector);
-					if (el) el.style.display = "none";
-				}
+			function hide(selector) {
+				const el = document.querySelector(selector);
+				if (el) el.style.display = "none";
+			}
 
-				function set(id, html) {
-					document.getElementById(id).innerHTML = html;
+			// Track which sections have been finalized
+			const _done = new Set();
+			function set(id, html) {
+				document.getElementById(id).innerHTML = html;
+				if (!_done.has(id)) {
+					_done.add(id);
+					_completedSections++;
+					const pct = Math.min(100, Math.round((_completedSections / _totalSections) * 100));
+					const fill = document.getElementById('progressFill');
+					const text = document.getElementById('progressText');
+					if (fill) fill.style.width = pct + '%';
+					if (text) text.textContent = _completedSections + '/' + _totalSections + ' sections';
+					if (_completedSections >= _totalSections) {
+						setTimeout(() => {
+							document.getElementById('progressWrap').style.display = 'none';
+							const btn = document.getElementById('runBtn');
+							if (btn) {
+								btn.textContent = 'Scan Again';
+								btn.disabled = false;
+							}
+						}, 500);
+					}
 				}
+			}
 
-				function row(label, value) {
-					return `<pre><span class="kv-label">${label}</span>  <span class="kv-value">${value}</span></pre>`;
+			function row(label, value) {
+				return `<pre><span class="kv-label">${label}</span>  <span class="kv-value">${value}</span></pre>`;
+			}
+
+			// --- Browser & OS version parsing ---
+			function parseBrowser(ua) {
+				const tests = [
+					[/\b(?:Brave)\//i, 'Brave', /\bBrave\/(\S+)/i],
+					[/\bOPR\/|Opera/i, 'Opera', /\b(?:OPR|Opera)\/(\S+)/i],
+					[/\bEdg(?:e|A|iOS)?\//, 'Edge', /\bEdg(?:e|A|iOS)?\/(\S+)/],
+					[/\bSamsungBrowser\//, 'Samsung Internet', /\bSamsungBrowser\/(\S+)/],
+					[/\bUCBrowser\//, 'UC Browser', /\bUCBrowser\/(\S+)/],
+					[/\bVivaldi\//, 'Vivaldi', /\bVivaldi\/(\S+)/],
+					[/\bYaBrowser\//, 'Yandex', /\bYaBrowser\/(\S+)/],
+					[/\bFirefox\//, 'Firefox', /\bFirefox\/(\S+)/],
+					[/\bCriOS\//, 'Chrome (iOS)', /\bCriOS\/(\S+)/],
+					[/\bFxiOS\//, 'Firefox (iOS)', /\bFxiOS\/(\S+)/],
+					[/\bChrom(?:e|ium)\//, 'Chrome', /\bChrom(?:e|ium)\/(\S+)/],
+					[/\bSafari\/.*Version\//, 'Safari', /\bVersion\/(\S+)/],
+				];
+				for (const [test, name, verRe] of tests) {
+					if (test.test(ua)) {
+						const m = ua.match(verRe);
+						return { name, version: m ? m[1] : 'unknown' };
+					}
 				}
+				return { name: 'Unknown', version: 'unknown' };
+			}
+
+			function parseOS(ua) {
+				if (/Windows NT/.test(ua)) {
+					const m = ua.match(/Windows NT ([\d.]+)/);
+					const map = { '10.0': '10/11', '6.3': '8.1', '6.2': '8', '6.1': '7', '6.0': 'Vista', '5.1': 'XP' };
+					const ver = m ? m[1] : '';
+					return 'Windows ' + (map[ver] || ver);
+				}
+				if (/iPhone|iPad/.test(ua)) {
+					const m = ua.match(/OS ([\d_]+)/);
+					const ver = m ? m[1].replace(/_/g, '.') : '';
+					return (/iPad/.test(ua) ? 'iPadOS ' : 'iOS ') + ver;
+				}
+				if (/Android/.test(ua)) {
+					const m = ua.match(/Android ([\d.]+)/);
+					return 'Android ' + (m ? m[1] : '');
+				}
+				if (/Mac OS X|macOS/.test(ua)) {
+					const m = ua.match(/Mac OS X ([\d_.]+)/);
+					const ver = m ? m[1].replace(/_/g, '.') : '';
+					return 'macOS ' + ver;
+				}
+				if (/CrOS/.test(ua)) return 'ChromeOS';
+				if (/Linux/.test(ua)) return 'Linux';
+				if (/X11/.test(ua)) return 'UNIX';
+				return 'Unknown';
+			}
+
+			let _totalSections = 0;
+			let _completedSections = 0;
+
+			function runScan() {
+				const btn = document.getElementById('runBtn');
+				btn.disabled = true;
+				btn.textContent = 'Scanning...';
+				document.getElementById('progressWrap').style.display = 'block';
+				document.getElementById('resultsWrap').style.display = 'block';
+
+				// Reset progress state for re-runs
+				_done.clear();
+				_completedSections = 0;
+				const fill = document.getElementById('progressFill');
+				const ptext = document.getElementById('progressText');
+				if (fill) fill.style.width = '0%';
+				if (ptext) ptext.textContent = '0/0 sections';
+
+				// Count visible .info elements as total sections
+				_totalSections = document.querySelectorAll('#resultsWrap .section:not([style*="display:none"]) .info').length;
+
+				const mq = (query) => window.matchMedia(query).matches;
 
 				// Plugins
 				const plugins = navigator.plugins;
@@ -558,20 +719,14 @@ canvas {
 
 				// System
 				const userAgent = navigator.userAgent;
-				let os = "";
-				if (userAgent.includes('Windows'))     os = "Windows";
-				else if (userAgent.includes('iPhone')) os = "iOS";
-				else if (userAgent.includes('iPad'))   os = "iPadOS";
-				else if (userAgent.includes('Android')) os = "Android";
-				else if (userAgent.includes('Mac'))    os = "MacOS";
-				else if (userAgent.includes('Linux'))  os = "Linux";
-				else if (userAgent.includes('X11'))    os = "UNIX";
+				const osStr = parseOS(userAgent);
+				const browserInfo = parseBrowser(userAgent);
 				{
 					let sysInfo = '';
-					if (os) sysInfo += row("OS", os);
+					sysInfo += row("OS", osStr);
+					sysInfo += row("Browser", browserInfo.name + ' ' + browserInfo.version);
 					sysInfo += row("Platform", navigator.platform || 'N/A');
 					sysInfo += row("User Agent", userAgent || 'N/A');
-					// JS Engine detection
 					try {
 						null.x;
 					} catch (e) {
@@ -584,8 +739,7 @@ canvas {
 					}
 					sysInfo += row("Online", navigator.onLine ? "yes" : "no");
 					sysInfo += row("Secure Context", window.isSecureContext ? 'yes' : 'no');
-					if (sysInfo) set('operatingSystem', sysInfo);
-					else hide('.operatingSystem');
+					set('operatingSystem', sysInfo);
 				}
 
 				// Language
@@ -649,7 +803,6 @@ canvas {
 				}
 
 				// Preferences
-				const mq = (query) => window.matchMedia(query).matches;
 				set('preferences',
 					row("Dark Mode",       mq('(prefers-color-scheme: dark)')       ? "yes" : "no") +
 					row("Reduced Motion",  mq('(prefers-reduced-motion: reduce)')   ? "yes" : "no") +
@@ -2841,7 +2994,205 @@ canvas {
 					} catch (e) {
 						hide('.privacyScore');
 					}
-				}, 1000);
+				}, 2000);
+
+				// --- Clipboard API ---
+				try {
+					let clipInfo = '';
+					clipInfo += row("Clipboard API", 'clipboard' in navigator ? 'available' : 'not available');
+					clipInfo += row("clipboard.read", navigator.clipboard && navigator.clipboard.read ? 'available' : 'not available');
+					clipInfo += row("clipboard.readText", navigator.clipboard && navigator.clipboard.readText ? 'available' : 'not available');
+					clipInfo += row("clipboard.write", navigator.clipboard && navigator.clipboard.write ? 'available' : 'not available');
+					clipInfo += row("clipboard.writeText", navigator.clipboard && navigator.clipboard.writeText ? 'available' : 'not available');
+					// Check if gated behind user gesture
+					if (navigator.clipboard && navigator.clipboard.readText) {
+						navigator.clipboard.readText().then(() => {
+							clipInfo += row("Read Without Gesture", 'allowed (unusual)');
+							set('clipboardProbe', clipInfo);
+						}).catch(e => {
+							const reason = e.name === 'NotAllowedError' ? 'requires user gesture/permission' :
+								e.name === 'SecurityError' ? 'blocked (insecure context)' : e.name;
+							clipInfo += row("Read Without Gesture", reason);
+							set('clipboardProbe', clipInfo);
+						});
+					} else {
+						set('clipboardProbe', clipInfo);
+					}
+					// Check permissions
+					if (navigator.permissions) {
+						Promise.allSettled([
+							navigator.permissions.query({ name: 'clipboard-read' }),
+							navigator.permissions.query({ name: 'clipboard-write' }),
+						]).then(results => {
+							const current = document.getElementById('clipboardProbe').innerHTML;
+							let extra = '';
+							if (results[0].value) extra += row("Read Permission", results[0].value.state);
+							if (results[1].value) extra += row("Write Permission", results[1].value.state);
+							set('clipboardProbe', current + extra);
+						});
+					}
+				} catch (e) {
+					hide('.clipboardProbe');
+				}
+
+				// --- Extension Detection ---
+				(async () => {
+					try {
+						let extInfo = '';
+						const detected = [];
+
+						// DOM side-effect detection
+						const domProbes = [
+							{ name: 'uBlock Origin', check: () => {
+								const el = document.createElement('div');
+								el.className = 'ad-banner adsbox';
+								el.style.cssText = 'position:absolute;left:-9999px;width:1px;height:1px;';
+								el.innerHTML = '&nbsp;';
+								document.body.appendChild(el);
+								return new Promise(r => setTimeout(() => {
+									const blocked = el.offsetHeight === 0 || getComputedStyle(el).display === 'none';
+									document.body.removeChild(el);
+									r(blocked);
+								}, 100));
+							}},
+							{ name: 'Privacy Badger', check: () => {
+								return new Promise(r => {
+									const el = document.createElement('div');
+									el.id = 'pb-badge';
+									el.style.cssText = 'position:absolute;left:-9999px';
+									document.body.appendChild(el);
+									setTimeout(() => {
+										const modified = el.getAttribute('data-pb') !== null || el.children.length > 0;
+										document.body.removeChild(el);
+										r(modified);
+									}, 200);
+								});
+							}},
+						];
+
+						// Resource-based detection (blocked URLs indicate extensions)
+						const resourceProbes = [
+							{ name: 'Ad Blocker (generic)', url: 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js' },
+							{ name: 'Facebook Tracker Block', url: 'https://connect.facebook.net/en_US/fbevents.js' },
+							{ name: 'Google Analytics Block', url: 'https://www.google-analytics.com/analytics.js' },
+							{ name: 'Hotjar Block', url: 'https://static.hotjar.com/c/hotjar-0.js' },
+						];
+
+						// CSS injection detection (some extensions inject stylesheets)
+						const sheets = document.styleSheets;
+						let injectedStyles = 0;
+						for (let i = 0; i < sheets.length; i++) {
+							try {
+								const sheet = sheets[i];
+								if (sheet.href && !sheet.href.startsWith(location.origin) && !sheet.href.startsWith('data:')) {
+									injectedStyles++;
+								}
+								// Extensions often inject rules without href
+								if (!sheet.href && sheet.ownerNode && sheet.ownerNode.tagName === 'STYLE') {
+									const node = sheet.ownerNode;
+									if (!node.closest('head') || node.getAttribute('data-extension')) {
+										injectedStyles++;
+									}
+								}
+							} catch (e) {
+								// Cross-origin stylesheet - might be extension
+								injectedStyles++;
+							}
+						}
+						extInfo += row("Injected Stylesheets", injectedStyles > 0 ? injectedStyles + ' found' : 'none detected');
+
+						// Check for injected scripts
+						const scripts = document.querySelectorAll('script[src]');
+						let injectedScripts = 0;
+						scripts.forEach(s => {
+							if (s.src.startsWith('chrome-extension://') || s.src.startsWith('moz-extension://') || s.src.startsWith('safari-extension://')) {
+								injectedScripts++;
+							}
+						});
+						extInfo += row("Extension Scripts", injectedScripts > 0 ? injectedScripts + ' found' : 'none visible');
+
+						// DOM probes
+						for (const probe of domProbes) {
+							try {
+								const result = await probe.check();
+								extInfo += row(probe.name, result ? 'likely installed' : 'not detected');
+								if (result) detected.push(probe.name);
+							} catch (e) {
+								extInfo += row(probe.name, 'unable to test');
+							}
+						}
+
+						// Resource probes
+						for (const probe of resourceProbes) {
+							try {
+								const controller = new AbortController();
+								const timeout = setTimeout(() => controller.abort(), 2000);
+								await fetch(probe.url, { mode: 'no-cors', cache: 'no-store', signal: controller.signal });
+								clearTimeout(timeout);
+								extInfo += row(probe.name, 'not blocked');
+							} catch (e) {
+								extInfo += row(probe.name, 'BLOCKED');
+								detected.push(probe.name);
+							}
+						}
+
+						// Brave Shields
+						if (navigator.brave) {
+							try {
+								const isBrave = await navigator.brave.isBrave();
+								if (isBrave) {
+									extInfo += row("Brave Shields", 'detected (built-in blocker)');
+									detected.push('Brave Shields');
+								}
+							} catch (e) {}
+						}
+
+						// Known extension DOM markers
+						const markers = [
+							{ sel: '#ghostery-purple-box, #ghostery-box', name: 'Ghostery' },
+							{ sel: '[data-lastpass-icon-root]', name: 'LastPass' },
+							{ sel: '[data-dashlanecreated]', name: 'Dashlane' },
+							{ sel: '.bitwarden-popup, [data-bwautofill]', name: 'Bitwarden' },
+							{ sel: '[data-onepassword]', name: '1Password' },
+							{ sel: '#hprt-popup', name: 'Honey' },
+							{ sel: '[data-grammarly-shadow-root]', name: 'Grammarly' },
+							{ sel: '.dark-reader', name: 'Dark Reader' },
+						];
+						for (const m of markers) {
+							if (document.querySelector(m.sel)) {
+								extInfo += row(m.name, 'detected (DOM marker)');
+								detected.push(m.name);
+							}
+						}
+
+						// MutationObserver to check for late injections
+						const lateInjections = [];
+						const observer = new MutationObserver((mutations) => {
+							mutations.forEach(m => {
+								m.addedNodes.forEach(n => {
+									if (n.tagName === 'STYLE' || (n.tagName === 'SCRIPT' && n.src && (n.src.includes('extension') || n.src.includes('chrome-extension')))) {
+										lateInjections.push(n.tagName);
+									}
+								});
+							});
+						});
+						observer.observe(document.documentElement, { childList: true, subtree: true });
+						setTimeout(() => {
+							observer.disconnect();
+							if (lateInjections.length > 0) {
+								const current = document.getElementById('extensionDetect').innerHTML;
+								set('extensionDetect', current + row("Late DOM Injections", lateInjections.length + ' (' + lateInjections.join(', ') + ')'));
+							}
+						}, 3000);
+
+						extInfo += row("", "---");
+						extInfo += row("Extensions Detected", detected.length > 0 ? detected.join(', ') : 'none confirmed');
+
+						set('extensionDetect', extInfo);
+					} catch (e) {
+						hide('.extensionDetect');
+					}
+				})();
 			}
 		</script>
 	</body>
