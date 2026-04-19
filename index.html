@@ -89,8 +89,16 @@ a:active  { color: #009966; background: black; }
   display: none;
 }
 
-.MediaDeviceInfo {
-  display: normal;
+.section-group {
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid #1a3d2e;
+  color: #33cc99;
+  font-weight: bold;
+  font-size: 0.75em;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
 }
 
 @media only screen and (max-width: 800px) {
@@ -140,144 +148,12 @@ canvas {
 
 		<canvas id="canvas" width="0" height="0"></canvas>
 
-		<div class="section language">
-			<p>Language</p>
-			<div class="info" id="language"></div>
-		</div>
-
-		<div class="section timeZone">
-			<p>Time Zone</p>
-			<div class="info" id="timeZone"></div>
-		</div>
+		<!-- ==================== SYSTEM & HARDWARE ==================== -->
+		<div class="section-group">System &amp; Hardware</div>
 
 		<div class="section operatingSystem">
-			<p>Operating System</p>
+			<p>System</p>
 			<div class="info" id="operatingSystem"></div>
-		</div>
-
-		<div class="section ipAddress">
-			<p>Network</p>
-			<div class="info" id="ipAddress"></div>
-		</div>
-
-		<div class="section connection">
-			<p>Connection</p>
-			<div class="info" id="connection"></div>
-		</div>
-
-		<div class="section cpuCores">
-			<p>CPU</p>
-			<div class="info" id="cpuCores"></div>
-		</div>
-
-		<div class="section GPU">
-			<p>GPU</p>
-			<div class="info" id="GPU"></div>
-		</div>
-
-		<div class="section memory">
-			<p>Memory</p>
-			<div class="info" id="memory"></div>
-		</div>
-
-		<div class="section performanceMemory">
-			<p>Performance Memory</p>
-			<div class="info" id="performanceMemory"></div>
-		</div>
-
-		<div class="section battery">
-			<p>Battery</p>
-			<div class="info" id="battery"></div>
-		</div>
-
-		<div class="section screen">
-			<p>Screen</p>
-			<div class="info" id="screen"></div>
-		</div>
-
-		<div class="section preferences">
-			<p>Preferences</p>
-			<div class="info" id="preferences"></div>
-		</div>
-
-		<div class="section storage">
-			<p>Storage</p>
-			<div class="info" id="storage"></div>
-		</div>
-
-		<div class="section browser">
-			<p>Browser</p>
-			<div class="info" id="browser"></div>
-		</div>
-
-		<div class="section userAgent">
-			<p>User Agent</p>
-			<div class="info" id="userAgent"></div>
-		</div>
-
-		<div class="section plugins">
-			<p>Plugins</p>
-			<div class="info" id="plugins"></div>
-		</div>
-
-		<div class="section MediaDeviceInfo">
-			<p>Media Devices</p>
-			<div class="info" id="MediaDeviceInfo"></div>
-		</div>
-
-		<div class="section canvasFingerprint">
-			<p>Canvas Fingerprint</p>
-			<div class="info" id="canvasFingerprint"></div>
-		</div>
-
-		<div class="section audioFingerprint">
-			<p>Audio Fingerprint</p>
-			<div class="info" id="audioFingerprint"></div>
-		</div>
-
-		<div class="section webglParams">
-			<p>WebGL Parameters</p>
-			<div class="info" id="webglParams"></div>
-		</div>
-
-		<div class="section fonts">
-			<p>Detected Fonts</p>
-			<div class="info" id="fonts"></div>
-		</div>
-
-		<div class="section speechVoices">
-			<p>Speech Synthesis Voices</p>
-			<div class="info" id="speechVoices"></div>
-		</div>
-
-		<div class="section permissions">
-			<p>Permissions</p>
-			<div class="info" id="permissions"></div>
-		</div>
-
-		<div class="section timing">
-			<p>Timing / Performance</p>
-			<div class="info" id="timing"></div>
-		</div>
-
-		<div class="section mathFingerprint">
-			<p>Math Fingerprint</p>
-			<div class="info" id="mathFingerprint"></div>
-		</div>
-
-		<div class="section intlInfo">
-			<p>Intl / Locale</p>
-			<div class="info" id="intlInfo"></div>
-		</div>
-
-		<div class="section mediaCapabilities">
-			<p>Media / Codec Support</p>
-			<div class="info" id="mediaCapabilities"></div>
-		</div>
-
-		<div class="section hardwareAPIs">
-			<p>Hardware APIs</p>
-			<div class="info" id="hardwareAPIs"></div>
 		</div>
 
 		<div class="section navigatorProps">
@@ -285,39 +161,9 @@ canvas {
 			<div class="info" id="navigatorProps"></div>
 		</div>
 
-		<div class="section inputDevices">
-			<p>Input Devices</p>
-			<div class="info" id="inputDevices"></div>
-		</div>
-
-		<div class="section windowProps">
-			<p>Window / Runtime</p>
-			<div class="info" id="windowProps"></div>
-		</div>
-
-		<div class="section cssSupport">
-			<p>CSS Support</p>
-			<div class="info" id="cssSupport"></div>
-		</div>
-
-		<div class="section networkDeep">
-			<p>Network (Deep)</p>
-			<div class="info" id="networkDeep"></div>
-		</div>
-
-		<div class="section webrtcLeak">
-			<p>WebRTC IP Leak</p>
-			<div class="info" id="webrtcLeak"></div>
-		</div>
-
-		<div class="section geoIP">
-			<p>GeoIP</p>
-			<div class="info" id="geoIP"></div>
-		</div>
-
-		<div class="section dnsLeak">
-			<p>DNS / Protocol</p>
-			<div class="info" id="dnsLeak"></div>
+		<div class="section cpuCores">
+			<p>CPU</p>
+			<div class="info" id="cpuCores"></div>
 		</div>
 
 		<div class="section cpuBench">
@@ -325,14 +171,24 @@ canvas {
 			<div class="info" id="cpuBench"></div>
 		</div>
 
-		<div class="section memoryProbe">
-			<p>Memory Probe</p>
-			<div class="info" id="memoryProbe"></div>
+		<div class="section workerProbe">
+			<p>CPU Parallelism</p>
+			<div class="info" id="workerProbe"></div>
 		</div>
 
-		<div class="section diskProbe">
-			<p>Disk Probe</p>
-			<div class="info" id="diskProbe"></div>
+		<div class="section GPU">
+			<p>GPU</p>
+			<div class="info" id="GPU"></div>
+		</div>
+
+		<div class="section webglParams">
+			<p>WebGL</p>
+			<div class="info" id="webglParams"></div>
+		</div>
+
+		<div class="section gpuDeep">
+			<p>WebGPU</p>
+			<div class="info" id="gpuDeep"></div>
 		</div>
 
 		<div class="section gpuBench">
@@ -340,54 +196,95 @@ canvas {
 			<div class="info" id="gpuBench"></div>
 		</div>
 
-		<div class="section gpuDeep">
-			<p>WebGPU Adapter</p>
-			<div class="info" id="gpuDeep"></div>
+		<div class="section memory" style="display:none">
+			<p>Memory</p>
+			<div class="info" id="memory"></div>
 		</div>
 
-		<div class="section clockDrift">
-			<p>Clock / Entropy</p>
-			<div class="info" id="clockDrift"></div>
+		<div class="section memoryProbe">
+			<p>Memory</p>
+			<div class="info" id="memoryProbe"></div>
 		</div>
 
-		<div class="section tlsFingerprint">
-			<p>TLS / Security</p>
-			<div class="info" id="tlsFingerprint"></div>
+		<div class="section performanceMemory">
+			<p>JS Heap</p>
+			<div class="info" id="performanceMemory"></div>
 		</div>
 
-		<div class="section gcTiming">
-			<p>GC / Runtime Timing</p>
-			<div class="info" id="gcTiming"></div>
+		<div class="section screen">
+			<p>Display</p>
+			<div class="info" id="screen"></div>
+		</div>
+
+		<div class="section battery">
+			<p>Battery</p>
+			<div class="info" id="battery"></div>
+		</div>
+
+		<div class="section inputDevices">
+			<p>Input</p>
+			<div class="info" id="inputDevices"></div>
+		</div>
+
+		<div class="section hardwareAPIs">
+			<p>Hardware APIs</p>
+			<div class="info" id="hardwareAPIs"></div>
+		</div>
+
+		<!-- ==================== NETWORK ==================== -->
+		<div class="section-group">Network</div>
+
+		<div class="section networkDeep">
+			<p>Network</p>
+			<div class="info" id="networkDeep"></div>
+		</div>
+
+		<div class="section ipAddress" style="display:none">
+			<p>IP Address</p>
+			<div class="info" id="ipAddress"></div>
+		</div>
+
+		<div class="section geoIP">
+			<p>GeoIP</p>
+			<div class="info" id="geoIP"></div>
+		</div>
+
+		<div class="section webrtcLeak">
+			<p>WebRTC IPs</p>
+			<div class="info" id="webrtcLeak"></div>
+		</div>
+
+		<div class="section connection" style="display:none">
+			<p>Connection</p>
+			<div class="info" id="connection"></div>
 		</div>
 
 		<div class="section bandwidthEst">
-			<p>Bandwidth Estimate</p>
+			<p>Bandwidth</p>
 			<div class="info" id="bandwidthEst"></div>
 		</div>
 
-		<div class="section workerProbe">
-			<p>Worker Thread Probe</p>
-			<div class="info" id="workerProbe"></div>
+		<div class="section dnsLeak">
+			<p>DNS / Protocol</p>
+			<div class="info" id="dnsLeak"></div>
 		</div>
+
+		<div class="section diskProbe">
+			<p>Storage I/O</p>
+			<div class="info" id="diskProbe"></div>
+		</div>
+
+		<!-- ==================== PRIVACY ==================== -->
+		<div class="section-group">Privacy</div>
 
 		<div class="section privacyScore">
 			<p>Privacy Score</p>
 			<div class="info" id="privacyScore"></div>
 		</div>
 
-		<div class="section trackingAPIs">
-			<p>Tracking Surface</p>
-			<div class="info" id="trackingAPIs"></div>
-		</div>
-
-		<div class="section storageLeaks">
-			<p>Storage / State Leaks</p>
-			<div class="info" id="storageLeaks"></div>
-		</div>
-
-		<div class="section crossOriginLeaks">
-			<p>Cross-Origin Leaks</p>
-			<div class="info" id="crossOriginLeaks"></div>
+		<div class="section uniquenessEstimate">
+			<p>Uniqueness Estimate</p>
+			<div class="info" id="uniquenessEstimate"></div>
 		</div>
 
 		<div class="section fingerprintHash">
@@ -395,19 +292,29 @@ canvas {
 			<div class="info" id="fingerprintHash"></div>
 		</div>
 
+		<div class="section browserPrivacy">
+			<p>Browser Privacy</p>
+			<div class="info" id="browserPrivacy"></div>
+		</div>
+
+		<div class="section trackingAPIs">
+			<p>Tracking Surface</p>
+			<div class="info" id="trackingAPIs"></div>
+		</div>
+
 		<div class="section adblockDetect">
 			<p>Ad / Tracker Blocking</p>
 			<div class="info" id="adblockDetect"></div>
 		</div>
 
-		<div class="section privacyHeaders">
-			<p>Privacy Headers</p>
-			<div class="info" id="privacyHeaders"></div>
+		<div class="section crossOriginLeaks">
+			<p>Cross-Origin Leaks</p>
+			<div class="info" id="crossOriginLeaks"></div>
 		</div>
 
-		<div class="section browserPrivacy">
-			<p>Browser Privacy Features</p>
-			<div class="info" id="browserPrivacy"></div>
+		<div class="section storageLeaks">
+			<p>Storage Leaks</p>
+			<div class="info" id="storageLeaks"></div>
 		</div>
 
 		<div class="section supercookies">
@@ -420,9 +327,128 @@ canvas {
 			<div class="info" id="socialLeaks"></div>
 		</div>
 
-		<div class="section uniquenessEstimate">
-			<p>Uniqueness Estimate</p>
-			<div class="info" id="uniquenessEstimate"></div>
+		<div class="section tlsFingerprint">
+			<p>Security &amp; TLS</p>
+			<div class="info" id="tlsFingerprint"></div>
+		</div>
+
+		<div class="section privacyHeaders">
+			<p>Privacy Headers</p>
+			<div class="info" id="privacyHeaders"></div>
+		</div>
+
+		<div class="section permissions">
+			<p>Permissions</p>
+			<div class="info" id="permissions"></div>
+		</div>
+
+		<!-- ==================== BROWSER & ENVIRONMENT ==================== -->
+		<div class="section-group">Browser &amp; Environment</div>
+
+		<div class="section browser">
+			<p>Browser</p>
+			<div class="info" id="browser"></div>
+		</div>
+
+		<div class="section userAgent" style="display:none">
+			<p>User Agent</p>
+			<div class="info" id="userAgent"></div>
+		</div>
+
+		<div class="section windowProps">
+			<p>Runtime APIs</p>
+			<div class="info" id="windowProps"></div>
+		</div>
+
+		<div class="section language">
+			<p>Locale</p>
+			<div class="info" id="language"></div>
+		</div>
+
+		<div class="section timeZone" style="display:none">
+			<p>Time Zone</p>
+			<div class="info" id="timeZone"></div>
+		</div>
+
+		<div class="section intlInfo">
+			<p>Intl</p>
+			<div class="info" id="intlInfo"></div>
+		</div>
+
+		<div class="section preferences">
+			<p>Preferences</p>
+			<div class="info" id="preferences"></div>
+		</div>
+
+		<div class="section clockDrift">
+			<p>Clock / Entropy</p>
+			<div class="info" id="clockDrift"></div>
+		</div>
+
+		<div class="section timing">
+			<p>Page Timing</p>
+			<div class="info" id="timing"></div>
+		</div>
+
+		<div class="section gcTiming">
+			<p>GC / Runtime</p>
+			<div class="info" id="gcTiming"></div>
+		</div>
+
+		<div class="section storage" style="display:none">
+			<p>Storage Quota</p>
+			<div class="info" id="storage"></div>
+		</div>
+
+		<div class="section cssSupport">
+			<p>CSS Support</p>
+			<div class="info" id="cssSupport"></div>
+		</div>
+
+		<!-- ==================== FINGERPRINTING ==================== -->
+		<div class="section-group">Fingerprinting</div>
+
+		<div class="section canvasFingerprint">
+			<p>Canvas</p>
+			<div class="info" id="canvasFingerprint"></div>
+		</div>
+
+		<div class="section audioFingerprint">
+			<p>Audio</p>
+			<div class="info" id="audioFingerprint"></div>
+		</div>
+
+		<div class="section mathFingerprint">
+			<p>Math</p>
+			<div class="info" id="mathFingerprint"></div>
+		</div>
+
+		<div class="section fonts">
+			<p>Fonts</p>
+			<div class="info" id="fonts"></div>
+		</div>
+
+		<!-- ==================== MEDIA & DEVICES ==================== -->
+		<div class="section-group">Media &amp; Devices</div>
+
+		<div class="section mediaCapabilities">
+			<p>Codecs / DRM</p>
+			<div class="info" id="mediaCapabilities"></div>
+		</div>
+
+		<div class="section MediaDeviceInfo">
+			<p>Media Devices</p>
+			<div class="info" id="MediaDeviceInfo"></div>
+		</div>
+
+		<div class="section speechVoices">
+			<p>Speech Voices</p>
+			<div class="info" id="speechVoices"></div>
+		</div>
+
+		<div class="section plugins">
+			<p>Plugins</p>
+			<div class="info" id="plugins"></div>
 		</div>
 
 		<div class="footer"><a href="https://theden.sh" target="_blank" rel="noopener">/TheDen.sh</a></div>
@@ -508,7 +534,7 @@ canvas {
 					set('timeZone', row("Timezone", timeZone));
 				}
 
-				// Operating System
+				// System
 				const userAgent = navigator.userAgent;
 				let os = "";
 				if (userAgent.includes('Windows'))     os = "Windows";
@@ -518,10 +544,26 @@ canvas {
 				else if (userAgent.includes('Mac'))    os = "MacOS";
 				else if (userAgent.includes('Linux'))  os = "Linux";
 				else if (userAgent.includes('X11'))    os = "UNIX";
-				if (!os) {
-					hide('.operatingSystem');
-				} else {
-					set('operatingSystem', row("OS", os));
+				{
+					let sysInfo = '';
+					if (os) sysInfo += row("OS", os);
+					sysInfo += row("Platform", navigator.platform || 'N/A');
+					sysInfo += row("User Agent", userAgent || 'N/A');
+					// JS Engine detection
+					try {
+						null.x;
+					} catch (e) {
+						const stack = e.stack || '';
+						let engine = 'unknown';
+						if (stack.includes('at ')) engine = 'V8 (Chrome/Edge/Node)';
+						else if (stack.includes('@')) engine = 'SpiderMonkey (Firefox)';
+						else if (stack.includes('module code')) engine = 'JavaScriptCore (Safari)';
+						sysInfo += row("JS Engine", engine);
+					}
+					sysInfo += row("Online", navigator.onLine ? "yes" : "no");
+					sysInfo += row("Secure Context", window.isSecureContext ? 'yes' : 'no');
+					if (sysInfo) set('operatingSystem', sysInfo);
+					else hide('.operatingSystem');
 				}
 
 				// Language
@@ -536,8 +578,8 @@ canvas {
 				if (touchPoints != null) cpuInfo += row("Max Touch Points", touchPoints);
 				set('cpuCores', cpuInfo);
 
-				// User Agent
-				set('userAgent', row("User Agent", userAgent || "N/A"));
+				// User Agent (kept for standalone section)
+				set('userAgent', row("Full String", userAgent || "N/A"));
 
 				// GPU
 				const glCanvas = document.createElement('canvas');
@@ -610,7 +652,6 @@ canvas {
 				// Browser capabilities
 				set('browser',
 					row("Cookies Enabled",  navigator.cookieEnabled ? "yes" : "no") +
-					row("Online",           navigator.onLine ? "yes" : "no") +
 					row("PDF Viewer",       navigator.pdfViewerEnabled ? "yes" : "no") +
 					row("WebAssembly",      typeof WebAssembly === 'object' ? "yes" : "no") +
 					row("Service Worker",   'serviceWorker' in navigator ? "yes" : "no") +
@@ -1054,17 +1095,13 @@ canvas {
 				// --- Navigator properties ---
 				try {
 					let navInfo = '';
-					navInfo += row("Platform", navigator.platform || 'N/A');
 					navInfo += row("Vendor", navigator.vendor || 'N/A');
 					navInfo += row("Product", navigator.product || 'N/A');
 					navInfo += row("App Name", navigator.appName || 'N/A');
 					navInfo += row("App Code Name", navigator.appCodeName || 'N/A');
 					navInfo += row("App Version", navigator.appVersion || 'N/A');
 					navInfo += row("Build ID", navigator.buildID || 'N/A');
-					navInfo += row("Do Not Track", navigator.doNotTrack || 'N/A');
-					navInfo += row("Global Privacy", navigator.globalPrivacyControl != null ? (navigator.globalPrivacyControl ? 'on' : 'off') : 'N/A');
 					navInfo += row("Webdriver", navigator.webdriver ? 'yes' : 'no');
-					navInfo += row("User Activation", navigator.userActivation ? 'supported' : 'no');
 					// Client Hints
 					if (navigator.userAgentData) {
 						const uad = navigator.userAgentData;
@@ -1142,8 +1179,6 @@ canvas {
 					winInfo += row("Scroll Bars", window.innerWidth !== document.documentElement.clientWidth ? 'visible' : 'hidden');
 					winInfo += row("History Length", window.history.length);
 					winInfo += row("SharedArrayBuffer", typeof SharedArrayBuffer !== 'undefined' ? 'available' : 'no');
-					winInfo += row("Cross-Origin Isolated", window.crossOriginIsolated ? 'yes' : 'no');
-					winInfo += row("Secure Context", window.isSecureContext ? 'yes' : 'no');
 					winInfo += row("IndexedDB", 'indexedDB' in window ? 'available' : 'no');
 					winInfo += row("Web Workers", typeof Worker !== 'undefined' ? 'available' : 'no');
 					winInfo += row("Shared Workers", typeof SharedWorker !== 'undefined' ? 'available' : 'no');
@@ -1158,17 +1193,6 @@ canvas {
 					winInfo += row("Barcode Detector", 'BarcodeDetector' in window ? 'available' : 'no');
 					winInfo += row("Face Detector", 'FaceDetector' in window ? 'available' : 'no');
 					winInfo += row("Text Detector", 'TextDetector' in window ? 'available' : 'no');
-					// Error stack format detection — reveals browser engine
-					try {
-						null.x;
-					} catch (e) {
-						const stack = e.stack || '';
-						let engine = 'unknown';
-						if (stack.includes('at ')) engine = 'V8 (Chrome/Edge/Node)';
-						else if (stack.includes('@')) engine = 'SpiderMonkey (Firefox)';
-						else if (stack.includes('module code')) engine = 'JavaScriptCore (Safari)';
-						winInfo += row("JS Engine (via stack)", engine);
-					}
 					set('windowProps', winInfo);
 				} catch (e) {
 					hide('.windowProps');
